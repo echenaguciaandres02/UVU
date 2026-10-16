@@ -87,6 +87,15 @@ jobs:
             exit $STATUS
           fi
 
+      - name: Diagnóstico (si fallaron)
+        if: failure()
+        run: |
+          xcrun xcresulttool get test-results summary --path TestResults.xcresult --compact || true
+          echo "---- Reportes de cierre inesperado ----"
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/*UVU*.ips 2>/dev/null | head -3); do
+            echo "== $f"; head -c 12000 "$f"; echo
+          done
+
       - name: Subir resultados de tests (si fallaron)
         if: failure()
         uses: actions/upload-artifact@v4
