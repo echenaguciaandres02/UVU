@@ -65,8 +65,9 @@ final class ScreenshotTests: XCTestCase {
         tapLabel(app, "Hechas")
         snap(app, "15-tareas-hechas")
         tapLabel(app, "Hoy")
-        app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "Entregar capítulo")).firstMatch.tap()
+        // El checkbox se llama "Completar Entregar capítulo…": se excluye para abrir la tarea, no completarla.
+        app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND NOT (label BEGINSWITH %@)",
+                                         "Entregar capítulo", "Completar")).firstMatch.tap()
         sleep(1)
         snap(app, "16-tarea-detalle")
         app.swipeUp(velocity: .slow)
