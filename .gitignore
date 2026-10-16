@@ -11,3 +11,6 @@ Payload/
 xcuserdata/
 *.xcuserstate
 .DS_Store
+
+# Capturas para revisar (no se suben al repositorio)
+Capturas-estetica/
