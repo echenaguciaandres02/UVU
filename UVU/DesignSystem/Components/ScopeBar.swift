@@ -11,6 +11,14 @@ struct ScopeBar<Option: Hashable & Identifiable>: View {
     @Namespace private var underline
 
     var body: some View {
+        // Desplazable: con texto grande las cuatro opciones no caben en una línea.
+        ScrollView(.horizontal, showsIndicators: false) {
+            optionsRow
+        }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+    }
+
+    private var optionsRow: some View {
         HStack(spacing: Space.l) {
             ForEach(options) { option in
                 let isSelected = option == selection
@@ -49,7 +57,6 @@ struct ScopeBar<Option: Hashable & Identifiable>: View {
                 .accessibilityLabel(title(option))
                 .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
             }
-            Spacer(minLength: 0)
         }
         .padding(.vertical, Space.xs)
     }

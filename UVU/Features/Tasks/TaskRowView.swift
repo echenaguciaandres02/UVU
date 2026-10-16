@@ -69,29 +69,40 @@ struct TaskRowView: View {
     private func meta(overdue: Bool) -> some View {
         let parts = metaParts
         if !parts.isEmpty || overdue {
-            HStack(spacing: Space.xs) {
-                if overdue {
-                    // Marcador rojo (relleno) en vez de texto rojo pequeño.
-                    Rectangle().fill(.signal).frame(width: 6, height: 6)
-                    Text("Atrasada").labelCaps(10, .black, color: .bone)
-                }
-                ForEach(parts, id: \.self) { part in
-                    Text(part).labelCaps(10, .semibold)
-                }
-                if task.recurrence != .none {
-                    Image(systemName: "repeat")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.ash)
-                        .accessibilityLabel("Se repite: \(task.recurrence.title)")
-                }
-                if task.dueDate != nil && task.reminderEnabled && !task.isCompleted {
-                    Image(systemName: "bell.fill")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.ash)
-                        .accessibilityLabel("Con aviso")
-                }
+            // En una línea si cabe; con texto grande, una debajo de otra (sin cortar con "…").
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Space.xs) { metaItems(parts: parts, overdue: overdue) }
+                VStack(alignment: .leading, spacing: 2) { metaItems(parts: parts, overdue: overdue) }
             }
-            .lineLimit(1)
+        }
+    }
+
+    @ViewBuilder
+    private func metaItems(parts: [String], overdue: Bool) -> some View {
+        if overdue {
+            HStack(spacing: Space.xs) {
+                // Marcador rojo (relleno) en vez de texto rojo pequeño.
+                Rectangle().fill(.signal).frame(width: 6, height: 6)
+                Text("Atrasada").labelCaps(10, .black, color: .bone)
+            }
+            .fixedSize()
+        }
+        ForEach(parts, id: \.self) { part in
+            Text(part).labelCaps(10, .semibold).fixedSize()
+        }
+        HStack(spacing: Space.xs) {
+            if task.recurrence != .none {
+                Image(systemName: "repeat")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.ash)
+                    .accessibilityLabel("Se repite: \(task.recurrence.title)")
+            }
+            if task.dueDate != nil && task.reminderEnabled && !task.isCompleted {
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.ash)
+                    .accessibilityLabel("Con aviso")
+            }
         }
     }
 
