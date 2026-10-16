@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UIKit
 import UserNotifications
 
 /// Programa las notificaciones locales de la app.
@@ -23,19 +24,23 @@ enum NotificationService {
 
     // MARK: - Hábitos
 
-    private static func habitIdentifiers(_ id: UUID) -> [String] {
-        ["habit-\(id.uuidString)-daily"] + (1...7).map { "habit-\(id.uuidString)-wd\($0)" }
+    private static func habitPrefix(_ id: UUID) -> String {
+        "habit-\(id.uuidString)-"
     }
 
-    static func removeHabitReminders(for id: UUID) {
-        center.removePendingNotificationRequests(withIdentifiers: habitIdentifiers(id))
+    static func removeHabitReminders(for id: UUID) async {
+        let prefix = habitPrefix(id)
+        let pending = await center.pendingNotificationRequests()
+        let identifiers = pending.map(\.identifier).filter { $0.hasPrefix(prefix) }
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
-    /// Reemplaza el recordatorio del hábito según su hora y frecuencia actuales.
-    static func scheduleHabitReminder(for habit: Habit) async {
+    /// Reemplaza los recordatorios del hábito según sus horas y frecuencia actuales.
+    static func scheduleHabitReminders(for habit: Habit) async {
         let id = habit.id
-        removeHabitReminders(for: id)
-        guard !habit.isArchived, let hour = habit.reminderHour, let minute = habit.reminderMinute else { return }
+        let times = Array(Set(habit.reminderMinutes)).sorted()
+        await removeHabitReminders(for: id)
+        guard !habit.isArchived, !times.isEmpty else { return }
         guard await requestAuthorization() else { return }
 
         let content = UNMutableNotificationContent()
@@ -44,30 +49,27 @@ enum NotificationService {
             ? "Es hora de tu hábito."
             : "Meta de hoy: \(habit.goalDescription)."
         content.sound = .default
+        content.threadIdentifier = "habit-\(id.uuidString)"
 
-        var requests: [UNNotificationRequest] = []
-        if habit.frequency == .specificDays {
-            for weekday in habit.weekdays {
+        let weekdays: [Int?] = habit.frequency == .specificDays ? habit.weekdays.map { Optional($0) } : [nil]
+        for minutes in times {
+            for weekday in weekdays {
                 var components = DateComponents()
+                components.hour = minutes / 60
+                components.minute = minutes % 60
                 components.weekday = weekday
-                components.hour = hour
-                components.minute = minute
                 let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                requests.append(UNNotificationRequest(identifier: "habit-\(id.uuidString)-wd\(weekday)",
-                                                      content: content, trigger: trigger))
+                let suffix = weekday.map { "wd\($0)" } ?? "daily"
+                let request = UNNotificationRequest(identifier: "\(habitPrefix(id))\(minutes)-\(suffix)",
+                                                    content: content, trigger: trigger)
+                try? await center.add(request)
             }
-        } else {
-            var components = DateComponents()
-            components.hour = hour
-            components.minute = minute
-            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-            requests.append(UNNotificationRequest(identifier: "habit-\(id.uuidString)-daily",
-                                                  content: content, trigger: trigger))
         }
+    }
 
-        for request in requests {
-            try? await center.add(request)
-        }
+    /// Cuántas notificaciones pendientes usaría el hábito (iOS permite 64 en total).
+    static func notificationCount(times: Int, frequency: HabitFrequency, weekdays: Int) -> Int {
+        times * (frequency == .specificDays ? weekdays : 1)
     }
 
     /// Vuelve a programar todo (por ejemplo, después de importar un respaldo).
@@ -75,7 +77,30 @@ enum NotificationService {
         center.removeAllPendingNotificationRequests()
         let habits = (try? context.fetch(FetchDescriptor<Habit>())) ?? []
         for habit in habits {
-            await scheduleHabitReminder(for: habit)
+            await scheduleHabitReminders(for: habit)
         }
+    }
+}
+
+/// Muestra las notificaciones también cuando la app está abierta.
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
+    }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    private let notificationDelegate = NotificationDelegate()
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = notificationDelegate
+        return true
     }
 }

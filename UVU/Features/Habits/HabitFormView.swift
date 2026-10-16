@@ -19,8 +19,8 @@ struct HabitFormView: View {
     @State private var frequency: HabitFrequency = .daily
     @State private var weekdays: Set<Int> = [2, 3, 4, 5, 6]
     @State private var timesPerWeek = 3
-    @State private var hasReminder = false
-    @State private var reminderTime = AppCalendar.calendar.date(from: DateComponents(hour: 9, minute: 0)) ?? .now
+    @State private var reminders: [ReminderEntry] = []
+    @State private var showSpread = false
     @State private var didLoad = false
     @State private var confirmArchive = false
 
@@ -99,12 +99,27 @@ struct HabitFormView: View {
                 }
 
                 Section {
-                    Toggle("Recordatorio", isOn: $hasReminder.animation())
-                    if hasReminder {
-                        DatePicker("Hora", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                    ForEach($reminders) { $reminder in
+                        DatePicker("Hora", selection: $reminder.time, displayedComponents: .hourAndMinute)
                     }
+                    .onDelete { reminders.remove(atOffsets: $0) }
+
+                    if reminders.count < ReminderTime.maxPerHabit {
+                        Button {
+                            addReminder()
+                        } label: {
+                            Label("Agregar recordatorio", systemImage: "plus.circle.fill")
+                        }
+                        Button {
+                            showSpread = true
+                        } label: {
+                            Label("Repartir durante el día…", systemImage: "clock.arrow.2.circlepath")
+                        }
+                    }
+                } header: {
+                    Text("Recordatorios")
                 } footer: {
-                    Text("Recibirás una notificación a esa hora los días que toque el hábito.")
+                    Text(remindersFooter)
                 }
 
                 if habit != nil {
@@ -130,8 +145,32 @@ struct HabitFormView: View {
             .confirmationDialog("¿Archivar este hábito?", isPresented: $confirmArchive, titleVisibility: .visible) {
                 Button("Archivar") { archive() }
             }
+            .sheet(isPresented: $showSpread) {
+                SpreadRemindersSheet { minutes in
+                    reminders = minutes.map { ReminderEntry(minutes: $0) }
+                }
+            }
             .onAppear(perform: load)
         }
+    }
+
+    private var remindersFooter: String {
+        if reminders.isEmpty {
+            return "Sin recordatorios. Agrega una o varias horas para recibir una notificación los días que toque el hábito."
+        }
+        let total = NotificationService.notificationCount(times: reminders.count, frequency: frequency,
+                                                          weekdays: weekdays.count)
+        var text = "Recibirás una notificación a cada hora los días que toque el hábito. Desliza a la izquierda para borrar una."
+        if total > 20 {
+            text += " Ojo: iOS permite unas 64 notificaciones programadas en total para la app; este hábito usa \(total)."
+        }
+        return text
+    }
+
+    private func addReminder() {
+        let last = reminders.map(\.minutes).max()
+        let minutes = last.map { min($0 + 120, 23 * 60 + 59) } ?? 9 * 60
+        reminders.append(ReminderEntry(minutes: minutes))
     }
 
     private var trimmedName: String {
@@ -160,10 +199,7 @@ struct HabitFormView: View {
         frequency = habit.frequency
         if !habit.weekdays.isEmpty { weekdays = Set(habit.weekdays) }
         timesPerWeek = habit.timesPerWeek
-        if let hour = habit.reminderHour, let minute = habit.reminderMinute {
-            hasReminder = true
-            reminderTime = AppCalendar.calendar.date(from: DateComponents(hour: hour, minute: minute)) ?? reminderTime
-        }
+        reminders = habit.reminderMinutes.sorted().map { ReminderEntry(minutes: $0) }
     }
 
     private func save() {
@@ -185,17 +221,12 @@ struct HabitFormView: View {
         target.frequency = frequency
         target.weekdays = frequency == .specificDays ? weekdays.sorted() : []
         target.timesPerWeek = timesPerWeek
-        if hasReminder {
-            let components = AppCalendar.calendar.dateComponents([.hour, .minute], from: reminderTime)
-            target.reminderHour = components.hour
-            target.reminderMinute = components.minute
-        } else {
-            target.reminderHour = nil
-            target.reminderMinute = nil
-        }
+        target.reminderMinutes = Array(Set(reminders.map(\.minutes))).sorted()
+        target.reminderHour = nil
+        target.reminderMinute = nil
 
         try? context.save()
-        Task { await NotificationService.scheduleHabitReminder(for: target) }
+        Task { await NotificationService.scheduleHabitReminders(for: target) }
         dismiss()
     }
 
@@ -203,7 +234,8 @@ struct HabitFormView: View {
         guard let habit else { return }
         habit.isArchived = true
         try? context.save()
-        NotificationService.removeHabitReminders(for: habit.id)
+        let id = habit.id
+        Task { await NotificationService.removeHabitReminders(for: id) }
         dismiss()
         onArchive?()
     }

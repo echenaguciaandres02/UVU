@@ -55,6 +55,9 @@ final class Habit {
     /// Días de la semana en formato de `Calendar` (1 = domingo … 7 = sábado).
     var weekdays: [Int] = []
     var timesPerWeek: Int = 3
+    /// Horas de los recordatorios del día, en minutos desde medianoche (9:30 → 570).
+    var reminderMinutes: [Int] = []
+    /// Recordatorio único de la primera versión. Se pasa a `reminderMinutes` al abrir la app.
     var reminderHour: Int? = nil
     var reminderMinute: Int? = nil
     var systemRole: String? = nil
@@ -109,6 +112,13 @@ final class Habit {
         case .timesPerWeek:
             return timesPerWeek == 1 ? "1 vez por semana" : "\(timesPerWeek) veces por semana"
         }
+    }
+
+    /// "8:00, 12:00 y 16:00"
+    var remindersDescription: String? {
+        let times = reminderMinutes.sorted().map(ReminderTime.format)
+        guard let last = times.last else { return nil }
+        return times.count == 1 ? last : times.dropLast().joined(separator: ", ") + " y " + last
     }
 
     var goalDescription: String {

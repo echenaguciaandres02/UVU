@@ -107,11 +107,12 @@ struct ArchivedHabitsView: View {
         habit.isArchived = false
         habit.sortOrder = (active.map(\.sortOrder).max() ?? -1) + 1
         try? context.save()
-        Task { await NotificationService.scheduleHabitReminder(for: habit) }
+        Task { await NotificationService.scheduleHabitReminders(for: habit) }
     }
 
     private func delete(_ habit: Habit) {
-        NotificationService.removeHabitReminders(for: habit.id)
+        let id = habit.id
+        Task { await NotificationService.removeHabitReminders(for: id) }
         context.delete(habit)
         try? context.save()
         habitToDelete = nil

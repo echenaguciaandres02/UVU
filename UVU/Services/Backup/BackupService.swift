@@ -100,8 +100,11 @@ enum BackupService {
             habit.frequencyRaw = item.frequency
             habit.weekdays = item.weekdays
             habit.timesPerWeek = item.timesPerWeek
-            habit.reminderHour = item.reminderHour
-            habit.reminderMinute = item.reminderMinute
+            if let minutes = item.reminderMinutes {
+                habit.reminderMinutes = minutes
+            } else if let hour = item.reminderHour {
+                habit.reminderMinutes = [hour * 60 + (item.reminderMinute ?? 0)]
+            }
             habit.isArchived = item.isArchived
             habit.createdAt = item.createdAt
             context.insert(habit)
@@ -239,7 +242,7 @@ enum BackupService {
             id: habit.id, name: habit.name, symbol: habit.symbol, colorHex: habit.colorHex,
             kind: habit.kindRaw, target: habit.target, unit: habit.unit,
             frequency: habit.frequencyRaw, weekdays: habit.weekdays.sorted(), timesPerWeek: habit.timesPerWeek,
-            reminderHour: habit.reminderHour, reminderMinute: habit.reminderMinute,
+            reminderMinutes: habit.reminderMinutes.sorted(), reminderHour: nil, reminderMinute: nil,
             systemRole: habit.systemRole, sortOrder: habit.sortOrder, isArchived: habit.isArchived,
             createdAt: habit.createdAt,
             entries: (habit.entries ?? [])

@@ -39,6 +39,9 @@ struct HabitDTO: Codable, Equatable {
     var frequency: String
     var weekdays: [Int]
     var timesPerWeek: Int
+    /// Desde la fase 2b. Opcional para poder leer respaldos anteriores.
+    var reminderMinutes: [Int]?
+    /// Formato de la fase 1–2 (un solo recordatorio).
     var reminderHour: Int?
     var reminderMinute: Int?
     var systemRole: String?

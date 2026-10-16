@@ -5,19 +5,20 @@ struct HabitsHomeView: View {
     @Query(filter: #Predicate<Habit> { $0.isArchived == false }, sort: \Habit.sortOrder)
     private var habits: [Habit]
 
+    @State private var path: [HabitsRoute] = []
     @State private var showNewHabit = false
     @State private var showReorder = false
-    @State private var showArchived = false
-    @State private var showCalendar = false
     @State private var quantityHabit: Habit?
 
     var body: some View {
-        NavigationStack {
+        // Toda la navegación de la pestaña pasa por `path` y un único `navigationDestination`.
+        // (Antes había destinos con `isPresented:` y la app se colgaba al abrir el calendario.)
+        NavigationStack(path: $path) {
             List {
                 if !todayHabits.isEmpty {
                     Section("Hoy") {
                         ForEach(todayHabits) { habit in
-                            NavigationLink(value: habit) {
+                            NavigationLink(value: HabitsRoute.detail(habit)) {
                                 HabitRowView(habit: habit, day: .now) { quantityHabit = habit }
                             }
                         }
@@ -26,7 +27,7 @@ struct HabitsHomeView: View {
                 if !otherHabits.isEmpty {
                     Section("No tocan hoy") {
                         ForEach(otherHabits) { habit in
-                            NavigationLink(value: habit) {
+                            NavigationLink(value: HabitsRoute.detail(habit)) {
                                 HabitRowView(habit: habit, day: .now) { quantityHabit = habit }
                             }
                         }
@@ -34,19 +35,20 @@ struct HabitsHomeView: View {
                 }
             }
             .navigationTitle("Hábitos")
-            .navigationDestination(for: Habit.self) { habit in
-                HabitDetailView(habit: habit)
-            }
-            .navigationDestination(isPresented: $showCalendar) {
-                HabitsCalendarView()
-            }
-            .navigationDestination(isPresented: $showArchived) {
-                ArchivedHabitsView()
+            .navigationDestination(for: HabitsRoute.self) { route in
+                switch route {
+                case .detail(let habit):
+                    HabitDetailView(habit: habit)
+                case .calendar:
+                    HabitsCalendarView()
+                case .archived:
+                    ArchivedHabitsView()
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        showCalendar = true
+                        path.append(.calendar)
                     } label: {
                         Image(systemName: "calendar")
                     }
@@ -60,7 +62,7 @@ struct HabitsHomeView: View {
                             Label("Ordenar hábitos", systemImage: "arrow.up.arrow.down")
                         }
                         Button {
-                            showArchived = true
+                            path.append(.archived)
                         } label: {
                             Label("Archivados", systemImage: "archivebox")
                         }
@@ -105,6 +107,12 @@ struct HabitsHomeView: View {
     private var otherHabits: [Habit] {
         habits.filter { !HabitEvaluator(habit: $0).isScheduled(on: .now) }
     }
+}
+
+enum HabitsRoute: Hashable {
+    case detail(Habit)
+    case calendar
+    case archived
 }
 
 #Preview {

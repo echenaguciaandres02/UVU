@@ -77,9 +77,8 @@ struct HabitDetailView: View {
     }
 
     private var reminderText: String? {
-        guard let hour = habit.reminderHour, let minute = habit.reminderMinute else { return nil }
-        let date = AppCalendar.calendar.date(from: DateComponents(hour: hour, minute: minute)) ?? .now
-        return "Recordatorio a las \(date.formatted(date: .omitted, time: .shortened))"
+        guard let times = habit.remindersDescription else { return nil }
+        return habit.reminderMinutes.count == 1 ? "Recordatorio: \(times)" : "Recordatorios: \(times)"
     }
 
     private func percent(_ value: Double?) -> String {

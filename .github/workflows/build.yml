@@ -70,12 +70,29 @@ jobs:
                       print(device["udid"]); sys.exit()
           ')
           echo "Simulador: $UDID"
-          set -o pipefail
+          STATUS=0
           xcodebuild test \
             -project UVU.xcodeproj \
             -scheme UVU \
             -destination "id=$UDID" \
+            -resultBundlePath TestResults.xcresult \
             -test-timeouts-enabled YES \
             -maximum-test-execution-time-allowance 120 \
             CODE_SIGNING_ALLOWED=NO \
-            | grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* TEST"
+            > test.log 2>&1 || STATUS=$?
+          grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* TEST" test.log || true
+          if [ $STATUS -ne 0 ]; then
+            echo "---- Últimas líneas del registro ----"
+            tail -120 test.log
+            exit $STATUS
+          fi
+
+      - name: Subir resultados de tests (si fallaron)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: |
+            TestResults.xcresult
+            test.log
+          retention-days: 7
