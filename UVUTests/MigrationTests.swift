@@ -61,10 +61,10 @@ final class MigrationTests: XCTestCase {
         let folder = FileManager.default.temporaryDirectory.appending(path: "uvu-migration-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let url = folder.appending(path: "UVU.store")
-        defer { try? FileManager.default.removeItem(at: folder) }
+        // La carpeta temporal no se borra: hacerlo con la base aún abierta cierra el proceso.
 
-        // 1. Base creada por la versión anterior.
-        do {
+        // 1. Base creada por la versión anterior (y cerrada antes de abrirla de nuevo).
+        try autoreleasepool {
             let schema = Schema(versionedSchema: Phase2Schema.self)
             let container = try ModelContainer(
                 for: schema, migrationPlan: Phase2MigrationPlan.self,
