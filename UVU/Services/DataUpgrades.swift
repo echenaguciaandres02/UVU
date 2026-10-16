@@ -5,12 +5,15 @@ import SwiftData
 /// se vea bien con las funciones nuevas.
 @MainActor
 enum DataUpgrades {
-    static func run(context: ModelContext) {
+    /// Devuelve `true` si cambió algo que obliga a reprogramar las notificaciones.
+    @discardableResult
+    static func run(context: ModelContext) -> Bool {
         moveLegacyReminders(context: context)
     }
 
     /// Fase 2 → 2b: el recordatorio único pasa a la lista de recordatorios.
-    static func moveLegacyReminders(context: ModelContext) {
+    @discardableResult
+    static func moveLegacyReminders(context: ModelContext) -> Bool {
         let habits = (try? context.fetch(FetchDescriptor<Habit>())) ?? []
         var changed = false
         for habit in habits {
@@ -25,7 +28,7 @@ enum DataUpgrades {
         }
         if changed {
             try? context.save()
-            Task { await NotificationService.rescheduleAll(context: context) }
         }
+        return changed
     }
 }

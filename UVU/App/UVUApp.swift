@@ -9,7 +9,10 @@ struct UVUApp: App {
     init() {
         container = DataStore.makeContainer()
         SeedData.seedIfNeeded(context: container.mainContext)
-        DataUpgrades.run(context: container.mainContext)
+        if DataUpgrades.run(context: container.mainContext) {
+            let context = container.mainContext
+            Task { await NotificationService.rescheduleAll(context: context) }
+        }
     }
 
     var body: some Scene {
