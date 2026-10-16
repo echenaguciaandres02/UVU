@@ -1,0 +1,13 @@
+# Proyecto generado por XcodeGen
+UVU.xcodeproj/
+
+# Compilación
+build/
+DerivedData/
+Payload/
+*.ipa
+
+# Xcode / macOS
+xcuserdata/
+*.xcuserstate
+.DS_Store

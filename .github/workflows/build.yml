@@ -1,0 +1,72 @@
+# Compila UVU en un Mac de GitHub, corre los tests y genera UVU.ipa (sin firmar).
+# Sideloadly firma el .ipa con tu Apple ID al instalarlo en el iPhone.
+name: Compilar UVU
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versión de Xcode
+        run: xcodebuild -version
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: Generar proyecto Xcode
+        run: xcodegen generate
+
+      - name: Compilar .ipa para iPhone
+        run: |
+          xcodebuild build \
+            -project UVU.xcodeproj \
+            -scheme UVU \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            -quiet
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/UVU.app Payload/
+          zip -qry UVU.ipa Payload
+
+      - name: Subir UVU.ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: UVU-ipa
+          path: UVU.ipa
+          retention-days: 30
+
+      - name: Tests en el simulador
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, re, sys
+          devices = json.load(sys.stdin)["devices"]
+          def version(runtime):
+              return [int(n) for n in re.findall(r"\d+", runtime.split("iOS")[-1])]
+          for runtime in sorted((r for r in devices if ".iOS-" in r), key=version, reverse=True):
+              for device in devices[runtime]:
+                  if device["name"].startswith("iPhone"):
+                      print(device["udid"]); sys.exit()
+          ')
+          echo "Simulador: $UDID"
+          xcodebuild test \
+            -project UVU.xcodeproj \
+            -scheme UVU \
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
