@@ -20,8 +20,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Versión de Xcode
-        run: xcodebuild -version
+      # Usa el Xcode 26 más nuevo (estable) si el Mac lo tiene: así la app se compila
+      # para la misma versión de iOS que tu iPhone (aspecto nativo de iOS 26).
+      - name: Elegir Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+          xcrun simctl list runtimes | grep -i ios
 
       - name: Instalar XcodeGen
         run: brew install xcodegen
@@ -69,5 +75,7 @@ jobs:
             -project UVU.xcodeproj \
             -scheme UVU \
             -destination "id=$UDID" \
+            -test-timeouts-enabled YES \
+            -maximum-test-execution-time-allowance 120 \
             CODE_SIGNING_ALLOWED=NO \
             | grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* TEST"

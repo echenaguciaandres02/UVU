@@ -52,6 +52,20 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.uvu.app.tests
 
+  # Pruebas de interfaz: abren la app en el simulador y tocan botones como lo harías tú.
+  UVUUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UVUUITests
+    dependencies:
+      - target: UVU
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.uvu.app.uitests
+        TEST_TARGET_NAME: UVU
+
 schemes:
   UVU:
     build:
@@ -60,3 +74,4 @@ schemes:
     test:
       targets:
         - UVUTests
+        - UVUUITests
