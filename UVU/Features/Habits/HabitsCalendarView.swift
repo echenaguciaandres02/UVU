@@ -20,33 +20,31 @@ struct HabitsCalendarView: View {
                     let status = HabitSummary.combinedStatus(evaluators, on: day)
                     let isSelected = AppCalendar.calendar.isDate(day, inSameDayAs: selectedDay)
                     Button {
-                        withAnimation(.snappy) { selectedDay = day }
+                        withAnimation(Motion.quick) { selectedDay = day }
                         Haptics.tap()
                     } label: {
-                        CalendarDayCell(date: day, fill: status.fillColor, textColor: status.textColor,
-                                        accessibilityStatus: status.title)
-                            .overlay {
-                                if isSelected {
-                                    Circle()
-                                        .strokeBorder(Color.primary, lineWidth: 2)
-                                        .frame(width: 44, height: 44)
-                                }
-                            }
+                        CalendarDayCell(date: day, status: status, isSelected: isSelected)
                     }
                     .buttonStyle(.borderless)
                     .disabled(status == .future)
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
+                .padding(.vertical, Space.xs)
                 HabitStatusLegend()
+                    .padding(.bottom, Space.xs)
             } footer: {
-                Text("Verde: todos cumplidos. Amarillo: algunos. Rojo: ninguno.")
+                Text("Rojo: todos cumplidos. Rojo oscuro: algunos. Tachado: ninguno.")
+                    .formFooter()
             }
+            .rowSurface()
 
             DaySummarySection(day: selectedDay, habits: habits) {
                 editingDay = SelectedDay(date: selectedDay)
             }
+            .rowSurface()
         }
-        .navigationTitle("Calendario general")
+        .screenBackground()
+        .navigationTitle("CALENDARIO")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $editingDay) { selection in
             DayHabitsSheet(day: selection.date)
@@ -65,43 +63,47 @@ struct DaySummarySection: View {
     var body: some View {
         Section {
             if groups.isEmpty {
-                Text("Ningún hábito tocaba este día.")
-                    .foregroundStyle(.secondary)
+                Text(Quotes.empty)
+                    .labelCaps(12, .semibold)
             }
             ForEach(groups, id: \.status) { group in
                 DisclosureGroup(isExpanded: binding(for: group.status)) {
                     ForEach(group.items, id: \.habit.id) { item in
-                        HStack(spacing: 12) {
+                        HStack(spacing: Space.s) {
                             SymbolBadge(symbol: item.habit.symbol, colorHex: item.habit.colorHex, size: 28)
                             Text(item.habit.name)
+                                .font(.ui(15, .semibold, relativeTo: .subheadline))
+                                .textCase(.uppercase)
+                                .foregroundStyle(.bone)
                             Spacer()
                             if let detail = item.detail {
                                 Text(detail)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .labelCaps(11, .semibold)
                                     .monospacedDigit()
                             }
                         }
                     }
                 } label: {
-                    HStack(spacing: 10) {
-                        Circle()
-                            .fill(group.status.fillColor ?? Color(.systemGray3))
-                            .frame(width: 10, height: 10)
-                        Text("\(group.status.groupTitle) (\(group.items.count))")
-                            .foregroundStyle(.primary)
-                        Spacer(minLength: 4)
+                    HStack(spacing: Space.xs) {
+                        StatusSwatch(status: group.status)
+                            .frame(width: 14, height: 14)
+                        Text("\(group.status.groupTitle) · \(group.items.count)")
+                            .labelCaps(12, .black, color: .bone)
+                        Spacer(minLength: Space.xxs)
                         IconStack(habits: group.items.map(\.habit))
                     }
                 }
+                .tint(.ash)
             }
             Button {
                 onEdit()
             } label: {
                 Label("Marcar o corregir este día", systemImage: "square.and.pencil")
+                    .font(.ui(15, .semibold, relativeTo: .subheadline))
+                    .foregroundStyle(.bone)
             }
         } header: {
-            Text(title)
+            Text(title).labelCaps()
         }
     }
 
@@ -156,18 +158,17 @@ struct IconStack: View {
     private let maxVisible = 5
 
     var body: some View {
-        HStack(spacing: -6) {
+        HStack(spacing: -4) {
             ForEach(habits.prefix(maxVisible), id: \.id) { habit in
                 SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex, size: 24)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(Color(.secondarySystemGroupedBackground), lineWidth: 1.5)
+                        RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                            .strokeBorder(.carbon, lineWidth: 1.5)
                     }
             }
             if habits.count > maxVisible {
                 Text("+\(habits.count - maxVisible)")
-                    .font(.caption2.bold())
-                    .foregroundStyle(.secondary)
+                    .labelCaps(11, .black)
                     .padding(.leading, 10)
             }
         }
@@ -202,21 +203,28 @@ struct DayHabitsSheet: View {
         NavigationStack {
             List {
                 if !scheduled.isEmpty {
-                    Section("Tocaban este día") {
+                    Section {
                         ForEach(scheduled) { habit in
                             HabitRowView(habit: habit, day: day) { quantityHabit = habit }
                         }
+                    } header: {
+                        Text("Tocaban este día").labelCaps()
                     }
+                    .rowSurface()
                 }
                 if !others.isEmpty {
-                    Section("Otros") {
+                    Section {
                         ForEach(others) { habit in
                             HabitRowView(habit: habit, day: day) { quantityHabit = habit }
                         }
+                    } header: {
+                        Text("Otros").labelCaps()
                     }
+                    .rowSurface()
                 }
             }
-            .navigationTitle(title)
+            .screenBackground()
+            .navigationTitle(PosterHeader.dateLine(day))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -228,6 +236,7 @@ struct DayHabitsSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(Color.ink)
     }
 
     private var scheduled: [Habit] {
@@ -236,10 +245,6 @@ struct DayHabitsSheet: View {
 
     private var others: [Habit] {
         habits.filter { !HabitEvaluator(habit: $0).isScheduled(on: day) }
-    }
-
-    private var title: String {
-        day.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.spanish)).capitalizedFirst
     }
 }
 

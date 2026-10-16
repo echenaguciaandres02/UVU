@@ -7,30 +7,36 @@ struct GymHomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    RedPoster(text: "Cada repetición cuenta.",
+                              caption: "Rutinas y sesiones en vivo: fase 5",
+                              minHeight: 170, textSize: 44)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                }
+
                 ForEach(groups) { group in
-                    Section(group.muscle.title) {
+                    Section {
                         ForEach(group.exercises) { exercise in
-                            VStack(alignment: .leading, spacing: 2) {
+                            HStack {
                                 Text(exercise.name)
+                                    .font(.ui(16, .semibold))
+                                    .foregroundStyle(.bone)
+                                Spacer()
                                 if !exercise.equipment.isEmpty {
                                     Text(exercise.equipment)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .labelCaps(10, .semibold)
                                 }
                             }
+                            .rowSurface()
                         }
+                    } header: {
+                        Text(group.muscle.title).labelCaps()
                     }
                 }
             }
-            .navigationTitle("Gym")
-            .safeAreaInset(edge: .bottom) {
-                Text("Rutinas, sesiones en vivo y progreso llegan en la fase 5.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .padding(8)
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
-            }
+            .screenBackground()
+            .navigationTitle("GYM")
         }
     }
 
@@ -52,4 +58,5 @@ struct ExerciseGroup: Identifiable {
 #Preview {
     GymHomeView()
         .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
 }

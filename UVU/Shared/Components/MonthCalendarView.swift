@@ -12,37 +12,42 @@ struct MonthCalendarView<DayContent: View>: View {
     }
 
     private var calendar: Calendar { AppCalendar.calendar }
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: Space.xxs), count: 7)
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Space.s) {
             HStack {
                 Text(title)
-                    .font(.headline)
+                    .font(.display(26, relativeTo: .title2))
+                    .textCase(.uppercase)
+                    .foregroundStyle(.bone)
                 Spacer()
                 Button {
                     shiftMonth(by: -1)
                 } label: {
                     Image(systemName: "chevron.left")
-                        .frame(width: 36, height: 36)
+                        .font(.system(size: 15, weight: .bold))
+                        .frame(width: 40, height: 40)
                 }
                 .accessibilityLabel("Mes anterior")
                 Button {
                     shiftMonth(by: 1)
                 } label: {
                     Image(systemName: "chevron.right")
-                        .frame(width: 36, height: 36)
+                        .font(.system(size: 15, weight: .bold))
+                        .frame(width: 40, height: 40)
                 }
                 .accessibilityLabel("Mes siguiente")
             }
             .buttonStyle(.borderless)
+            .foregroundStyle(.bone)
 
-            LazyVGrid(columns: columns, spacing: 6) {
+            LazyVGrid(columns: columns, spacing: Space.xxs) {
                 ForEach(AppCalendar.orderedWeekdays, id: \.self) { weekday in
                     Text(AppCalendar.veryShortWeekdayName(weekday))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .labelCaps(11, .semibold)
                         .frame(maxWidth: .infinity)
+                        .padding(.bottom, Space.xxs)
                 }
                 ForEach(0..<leadingBlanks, id: \.self) { index in
                     Color.clear
@@ -57,7 +62,7 @@ struct MonthCalendarView<DayContent: View>: View {
     }
 
     private var title: String {
-        month.formatted(.dateTime.month(.wide).year().locale(AppLocale.spanish)).capitalizedFirst
+        month.formatted(.dateTime.month(.wide).year().locale(AppLocale.spanish))
     }
 
     private var monthInterval: DateInterval {
@@ -65,9 +70,10 @@ struct MonthCalendarView<DayContent: View>: View {
     }
 
     private var days: [Date] {
+        let interval = monthInterval
         var result: [Date] = []
-        var day = monthInterval.start
-        while day < monthInterval.end {
+        var day = interval.start
+        while day < interval.end {
             result.append(day)
             guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
             day = next
@@ -82,69 +88,102 @@ struct MonthCalendarView<DayContent: View>: View {
 
     private func shiftMonth(by value: Int) {
         if let newMonth = calendar.date(byAdding: .month, value: value, to: month) {
-            month = newMonth
+            withAnimation(Motion.quick) { month = newMonth }
         }
     }
 }
 
-/// Un día del calendario: número dentro de un círculo coloreado según su estado.
+// MARK: - Heatmap
+
+/// Cuadro de estado con la codificación DISCIPLINE:
+/// completo = `signal` lleno · parcial = `signalDeep` · fallado = `carbon` tachado ·
+/// no aplicaba = contorno punteado · pendiente/futuro = vacío.
+struct StatusSwatch: View {
+    let status: HabitDayStatus
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+        ZStack {
+            switch status {
+            case .completed:
+                shape.fill(.signal)
+            case .partial:
+                shape.fill(.signalDeep)
+            case .failed:
+                shape.fill(.carbon)
+                SlashShape()
+                    .stroke(Color.ash.opacity(0.7), lineWidth: 1.5)
+                    .clipShape(shape)
+            case .notApplicable:
+                shape.strokeBorder(.graphite, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+            case .pending:
+                shape.strokeBorder(.graphite, lineWidth: Stroke.hairline)
+            case .future:
+                Color.clear
+            }
+        }
+    }
+}
+
+/// Diagonal de abajo-izquierda a arriba-derecha (día fallado).
+struct SlashShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        return path
+    }
+}
+
+/// Un día del calendario de hábitos: cuadro de estado con el número encima.
 struct CalendarDayCell: View {
     let date: Date
-    var fill: Color?
-    var textColor: Color = .primary
-    var accessibilityStatus: String = ""
+    let status: HabitDayStatus
+    var isSelected = false
 
     var body: some View {
         let isToday = AppCalendar.calendar.isDateInToday(date)
         Text("\(AppCalendar.calendar.component(.day, from: date))")
-            .font(.callout.weight(isToday ? .bold : .regular))
+            .font(.ui(15, isToday ? .black : .semibold, relativeTo: .callout))
             .monospacedDigit()
-            .foregroundStyle(fill == nil ? Color.primary : textColor)
-            .frame(width: 36, height: 36)
-            .background {
-                Circle().fill(fill ?? Color.clear)
-            }
+            .foregroundStyle(status.numberColor)
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1, contentMode: .fit)
+            .background { StatusSwatch(status: status) }
             .overlay {
-                if isToday {
-                    Circle()
-                        .strokeBorder(Color.accentColor, lineWidth: 2)
+                if isToday || isSelected {
+                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                        .strokeBorder(isSelected ? Color.bone : .ash, lineWidth: isSelected ? 2 : 1.5)
                         .padding(-3)
                 }
             }
-            .frame(maxWidth: .infinity)
+            .padding(3)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(accessibilityText)
+            .accessibilityLabel(accessibilityText(isToday: isToday))
     }
 
-    private var accessibilityText: String {
-        let dateText = date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.spanish))
-        return accessibilityStatus.isEmpty ? dateText : "\(dateText), \(accessibilityStatus)"
+    private func accessibilityText(isToday: Bool) -> String {
+        var text = date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.spanish))
+        if isToday { text = "Hoy, " + text }
+        let statusText = status.title
+        return statusText.isEmpty ? text : "\(text), \(statusText)"
     }
 }
 
 extension HabitDayStatus {
-    var fillColor: Color? {
+    /// Color del número del día según el fondo del cuadro.
+    var numberColor: Color {
         switch self {
-        case .completed: return .green
-        case .partial: return .yellow
-        case .failed: return .red
-        case .notApplicable: return Color(.systemGray4)
-        case .pending, .future: return nil
-        }
-    }
-
-    var textColor: Color {
-        switch self {
-        case .completed, .failed: return .white
-        case .partial: return .black
-        default: return .primary
+        case .completed: return .ink
+        case .partial, .failed, .pending: return .bone
+        case .notApplicable, .future: return .ash
         }
     }
 
     var title: String {
         switch self {
-        case .completed: return "Cumplido"
+        case .completed: return "Completo"
         case .partial: return "Parcial"
         case .failed: return "Fallado"
         case .notApplicable: return "No aplicaba"
@@ -154,24 +193,23 @@ extension HabitDayStatus {
     }
 }
 
-/// Leyenda de colores de los calendarios de hábitos.
+/// Leyenda de los calendarios de hábitos.
 struct HabitStatusLegend: View {
     private let items: [HabitDayStatus] = [.completed, .partial, .failed, .notApplicable]
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: Space.m) {
             ForEach(items, id: \.title) { status in
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(status.fillColor ?? .clear)
-                        .frame(width: 10, height: 10)
+                HStack(spacing: Space.xxs) {
+                    StatusSwatch(status: status)
+                        .frame(width: 12, height: 12)
                     Text(status.title)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .labelCaps(10, .semibold)
                 }
             }
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -183,7 +221,10 @@ struct SelectedDay: Identifiable {
 
 #Preview {
     MonthCalendarView(month: .constant(.now)) { day in
-        CalendarDayCell(date: day, fill: day < .now ? .green : nil, textColor: .white)
+        let index = AppCalendar.calendar.component(.day, from: day)
+        let statuses: [HabitDayStatus] = [.completed, .completed, .partial, .failed, .notApplicable, .completed]
+        CalendarDayCell(date: day, status: day > .now ? .future : statuses[index % statuses.count])
     }
     .padding()
+    .background(Color.ink)
 }

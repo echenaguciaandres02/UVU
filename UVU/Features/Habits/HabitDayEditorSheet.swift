@@ -17,27 +17,47 @@ struct HabitDayEditorSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(spacing: 12) {
+                    HStack(spacing: Space.s) {
                         SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex, size: 44)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(habit.name)
-                                .font(.headline)
+                                .font(.ui(17, .semibold, relativeTo: .headline))
+                                .textCase(.uppercase)
+                                .foregroundStyle(.bone)
                             Text(dayTitle)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .labelCaps(11, .semibold)
                         }
                     }
+                    .rowSurface()
                 }
 
                 if habit.kind == .binary {
                     Section {
-                        Toggle("Cumplido", isOn: $isDone)
+                        Button {
+                            isDone.toggle()
+                            if isDone { Haptics.stamp() } else { Haptics.tap() }
+                        } label: {
+                            HStack(spacing: Space.m) {
+                                HabitCheckbox(progress: isDone ? 1 : 0, size: 44)
+                                Text(isDone ? "Hecho" : "Sin hacer")
+                                    .font(.display(34, relativeTo: .title))
+                                    .textCase(.uppercase)
+                                    .foregroundStyle(isDone ? Color.bone : .ash)
+                                Spacer()
+                            }
+                            .padding(.vertical, Space.xs)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isDone ? "Hecho. Toca para desmarcar" : "Sin hacer. Toca para marcar")
+                        .rowSurface()
                     }
                 } else {
                     quantitySections
                 }
             }
-            .navigationTitle("Registrar")
+            .screenBackground()
+            .navigationTitle("REGISTRAR")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -51,52 +71,69 @@ struct HabitDayEditorSheet: View {
             .onAppear(perform: load)
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(Color.ink)
     }
 
     @ViewBuilder
     private var quantitySections: some View {
         Section {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
                 TextField("0", text: $amountText)
                     .keyboardType(.decimalPad)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.numeral(64))
+                    .monospacedDigit()
+                    .foregroundStyle(.bone)
                     .focused($amountFocused)
                 Text(habit.unit)
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .labelCaps(13, .semibold)
             }
-            ProgressView(value: min(amount / max(habit.target, 0.0001), 1))
-                .tint(Color(hex: habit.colorHex))
+            QuantityBar(progress: min(amount / max(habit.target, 0.0001), 1))
+                .padding(.bottom, Space.xs)
         } footer: {
             Text("Meta: \(habit.goalDescription)")
+                .labelCaps(11, .semibold)
         }
+        .rowSurface()
 
-        Section("Sumar") {
-            HStack(spacing: 10) {
+        Section {
+            HStack(spacing: Space.xs) {
                 ForEach(increments, id: \.self) { increment in
                     Button("+\(NumberText.format(increment))") {
                         setAmount(amount + increment)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.uvuSecondary)
                 }
-                Spacer()
                 Button {
                     setAmount(amount - (increments.first ?? 1))
                 } label: {
                     Image(systemName: "minus")
+                        .fontWeight(.bold)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.uvuSecondary)
                 .accessibilityLabel("Restar")
             }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+        } header: {
+            Text("Sumar").labelCaps()
         }
 
         Section {
-            Button("Marcar meta completa") {
+            Button("Meta completa") {
                 setAmount(habit.target)
             }
-            Button("Borrar registro del día", role: .destructive) {
+            .buttonStyle(.uvuPrimary)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+
+            Button(role: .destructive) {
                 setAmount(0)
+            } label: {
+                Text("Borrar registro del día")
+                    .labelCaps(12, .semibold, color: .ash)
+                    .frame(maxWidth: .infinity)
             }
+            .listRowBackground(Color.clear)
         }
     }
 
@@ -116,7 +153,7 @@ struct HabitDayEditorSheet: View {
     private var dayTitle: String {
         if AppCalendar.calendar.isDateInToday(day) { return "Hoy" }
         if AppCalendar.calendar.isDateInYesterday(day) { return "Ayer" }
-        return day.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.spanish)).capitalizedFirst
+        return PosterHeader.dateLine(day)
     }
 
     private func setAmount(_ value: Double) {
@@ -132,9 +169,10 @@ struct HabitDayEditorSheet: View {
 
     private func save() {
         let value = habit.kind == .binary ? (isDone ? 1 : 0) : amount
+        let wasCompleted = HabitActions.isCompleted(habit, on: day)
         HabitActions.setValue(value, for: habit, on: day, in: context)
-        if HabitActions.isCompleted(habit, on: day) {
-            Haptics.success()
+        if HabitActions.isCompleted(habit, on: day) && !wasCompleted {
+            Haptics.stamp()
         }
         dismiss()
     }

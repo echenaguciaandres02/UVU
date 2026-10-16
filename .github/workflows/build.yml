@@ -87,6 +87,34 @@ jobs:
             exit $STATUS
           fi
 
+      - name: Exportar capturas de pantalla
+        if: always()
+        run: |
+          rm -rf Capturas Capturas-raw && mkdir -p Capturas
+          xcrun xcresulttool export attachments --path TestResults.xcresult --output-path Capturas-raw || true
+          python3 - <<'PY'
+          import json, os, shutil
+          raw, out = "Capturas-raw", "Capturas"
+          manifest = os.path.join(raw, "manifest.json")
+          if os.path.exists(manifest):
+              for test in json.load(open(manifest)):
+                  for item in test.get("attachments", []):
+                      name = (item.get("suggestedHumanReadableName") or item["exportedFileName"]).split("_")[0]
+                      if not name.endswith(".png"):
+                          name += ".png"
+                      shutil.copy(os.path.join(raw, item["exportedFileName"]), os.path.join(out, name))
+          print("Capturas:", sorted(os.listdir(out)))
+          PY
+
+      - name: Subir capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Capturas
+          path: Capturas
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: Diagnóstico (si fallaron)
         if: failure()
         run: |

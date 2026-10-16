@@ -35,17 +35,23 @@ struct SpreadRemindersSheet: View {
                         }
                     }
                 }
+                .rowSurface()
 
                 Section {
                     Text(preview.map(ReminderTime.format).joined(separator: " · "))
-                        .foregroundStyle(.secondary)
+                        .font(.ui(15, .regular, relativeTo: .subheadline))
+                        .monospacedDigit()
+                        .foregroundStyle(.ash)
                 } header: {
-                    Text("\(preview.count) recordatorios")
+                    Text("\(preview.count) recordatorios").labelCaps()
                 } footer: {
                     Text("Reemplaza los recordatorios actuales del hábito. Máximo \(ReminderTime.maxPerHabit).")
+                        .formFooter()
                 }
+                .rowSurface()
             }
-            .navigationTitle("Repartir recordatorios")
+            .uvuForm()
+            .navigationTitle("REPARTIR")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -62,6 +68,7 @@ struct SpreadRemindersSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(Color.ink)
     }
 
     private var preview: [Int] {

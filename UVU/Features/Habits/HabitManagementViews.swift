@@ -12,15 +12,20 @@ struct ReorderHabitsView: View {
         NavigationStack {
             List {
                 ForEach(habits) { habit in
-                    HStack(spacing: 12) {
+                    HStack(spacing: Space.s) {
                         SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex)
                         Text(habit.name)
+                            .font(.ui(16, .semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(.bone)
                     }
+                    .rowSurface()
                 }
                 .onMove(perform: move)
             }
+            .screenBackground()
             .environment(\.editMode, .constant(.active))
-            .navigationTitle("Ordenar hábitos")
+            .navigationTitle("ORDENAR")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -53,21 +58,24 @@ struct ArchivedHabitsView: View {
     var body: some View {
         List {
             ForEach(archived) { habit in
-                HStack(spacing: 12) {
+                HStack(spacing: Space.s) {
                     SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(habit.name)
+                            .font(.ui(16, .semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(.bone)
                         Text("\(habit.entries?.count ?? 0) registros")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .labelCaps(11, .semibold)
                     }
                 }
+                .rowSurface()
                 .swipeActions(edge: .trailing) {
                     Button("Eliminar", role: .destructive) { habitToDelete = habit }
                 }
                 .swipeActions(edge: .leading) {
                     Button("Restaurar") { restore(habit) }
-                        .tint(.green)
+                        .tint(.graphite)
                 }
                 .contextMenu {
                     Button {
@@ -83,11 +91,12 @@ struct ArchivedHabitsView: View {
                 }
             }
         }
-        .navigationTitle("Archivados")
+        .screenBackground()
+        .navigationTitle("ARCHIVADOS")
         .overlay {
             if archived.isEmpty {
-                ContentUnavailableView("Nada archivado", systemImage: "archivebox",
-                                       description: Text("Los hábitos que archives aparecerán aquí."))
+                RedPoster(text: Quotes.empty, caption: "Aquí van los hábitos que archives")
+                    .padding(Space.m)
             }
         }
         .confirmationDialog(

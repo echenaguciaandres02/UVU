@@ -7,33 +7,41 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.l) {
+                    VStack(alignment: .leading, spacing: Space.xs) {
                         Text(greeting)
-                            .font(.title2.bold())
-                        Text(formattedDate)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .labelCaps(13, .semibold, color: .ash)
+                        PosterHeader(title: "Hoy.", subtitle: PosterHeader.dateLine(), size: 104)
                     }
-                    .padding(.vertical, 4)
-                }
 
-                Section {
-                    ContentUnavailableView(
-                        "Tu día, en un vistazo",
-                        systemImage: "sun.max",
-                        description: Text("Aquí verás tus hábitos, tareas, recordatorios, el entreno del día y tu journal. Se completa en la fase 6.")
-                    )
+                    RedPoster(text: Quotes.ofTheDay(), caption: "Frase del día")
+                        .overlay(alignment: .topTrailing) {
+                            TapeLabel(text: "DO.")
+                                .padding(Space.m)
+                        }
+
+                    VStack(alignment: .leading, spacing: Space.xs) {
+                        Text("Tu día en un vistazo")
+                            .labelCaps(12, .black, color: .bone)
+                        Text("Hábitos, tareas, recordatorios, el entreno y tu journal. Llega en la fase 6.")
+                            .font(.uiCallout)
+                            .foregroundStyle(.ash)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardSurface()
                 }
+                .padding(.horizontal, Space.m)
+                .padding(.bottom, Space.xl)
             }
-            .navigationTitle("Hoy")
+            .background(Color.ink.ignoresSafeArea())
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         showCalendar = true
                     } label: {
                         Image(systemName: "calendar")
+                            .fontWeight(.bold)
                     }
                     .accessibilityLabel("Calendario")
                 }
@@ -42,6 +50,7 @@ struct TodayView: View {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
+                            .fontWeight(.bold)
                     }
                     .accessibilityLabel("Ajustes")
                 }
@@ -57,20 +66,15 @@ struct TodayView: View {
 
     private var greeting: String {
         switch AppCalendar.calendar.component(.hour, from: .now) {
-        case 5..<12: return "Buenos días"
+        case 4..<12: return "Buenos días"
         case 12..<19: return "Buenas tardes"
         default: return "Buenas noches"
         }
-    }
-
-    private var formattedDate: String {
-        Date.now
-            .formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.spanish))
-            .capitalizedFirst
     }
 }
 
 #Preview {
     TodayView()
         .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
 }

@@ -9,6 +9,7 @@ struct HabitsHomeView: View {
     @State private var showNewHabit = false
     @State private var showReorder = false
     @State private var quantityHabit: Habit?
+    @State private var showDayComplete = false
 
     var body: some View {
         // Toda la navegación de la pestaña pasa por `path` y un único `navigationDestination`.
@@ -16,25 +17,38 @@ struct HabitsHomeView: View {
         NavigationStack(path: $path) {
             List {
                 if !todayHabits.isEmpty {
-                    Section("Hoy") {
+                    Section {
+                        DayProgressHeader(done: doneTodayCount, total: todayHabits.count)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 0, leading: Space.m, bottom: Space.s, trailing: Space.m))
+                    }
+
+                    Section {
                         ForEach(todayHabits) { habit in
                             NavigationLink(value: HabitsRoute.detail(habit)) {
                                 HabitRowView(habit: habit, day: .now) { quantityHabit = habit }
                             }
+                            .rowSurface()
                         }
+                    } header: {
+                        Text("Hoy").labelCaps()
                     }
                 }
                 if !otherHabits.isEmpty {
-                    Section("No tocan hoy") {
+                    Section {
                         ForEach(otherHabits) { habit in
                             NavigationLink(value: HabitsRoute.detail(habit)) {
                                 HabitRowView(habit: habit, day: .now) { quantityHabit = habit }
                             }
+                            .rowSurface()
                         }
+                    } header: {
+                        Text("No tocan hoy").labelCaps()
                     }
                 }
             }
-            .navigationTitle("Hábitos")
+            .screenBackground()
+            .navigationTitle("HÁBITOS")
             .navigationDestination(for: HabitsRoute.self) { route in
                 switch route {
                 case .detail(let habit):
@@ -51,6 +65,7 @@ struct HabitsHomeView: View {
                         path.append(.calendar)
                     } label: {
                         Image(systemName: "calendar")
+                            .fontWeight(.bold)
                     }
                     .accessibilityLabel("Calendario general")
                 }
@@ -67,7 +82,8 @@ struct HabitsHomeView: View {
                             Label("Archivados", systemImage: "archivebox")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "ellipsis")
+                            .fontWeight(.bold)
                     }
                     .accessibilityLabel("Más opciones")
 
@@ -75,6 +91,7 @@ struct HabitsHomeView: View {
                         showNewHabit = true
                     } label: {
                         Image(systemName: "plus")
+                            .fontWeight(.bold)
                     }
                     .accessibilityLabel("Nuevo hábito")
                 }
@@ -90,13 +107,23 @@ struct HabitsHomeView: View {
             }
             .overlay {
                 if habits.isEmpty {
-                    ContentUnavailableView {
-                        Label("Sin hábitos", systemImage: "checkmark.circle")
-                    } description: {
-                        Text("Toca + para crear tu primer hábito.")
+                    VStack(spacing: Space.m) {
+                        RedPoster(text: Quotes.empty, caption: "Toca + para crear un hábito", minHeight: 260)
                     }
+                    .padding(Space.m)
                 }
             }
+        }
+        .overlay {
+            if showDayComplete {
+                DayCompleteOverlay()
+                    .transition(.opacity)
+                    .onTapGesture { withAnimation(Motion.quick) { showDayComplete = false } }
+            }
+        }
+        .onChange(of: allDoneToday) { wasDone, isDone in
+            guard isDone, !wasDone else { return }
+            celebrate()
         }
     }
 
@@ -106,6 +133,52 @@ struct HabitsHomeView: View {
 
     private var otherHabits: [Habit] {
         habits.filter { !HabitEvaluator(habit: $0).isScheduled(on: .now) }
+    }
+
+    private var doneTodayCount: Int {
+        todayHabits.filter { HabitActions.isCompleted($0, on: .now) }.count
+    }
+
+    private var allDoneToday: Bool {
+        !todayHabits.isEmpty && doneTodayCount == todayHabits.count
+    }
+
+    /// Pantalla roja breve al completar todo el día.
+    private func celebrate() {
+        Haptics.success()
+        withAnimation(Motion.quick) { showDayComplete = true }
+        Task {
+            try? await Task.sleep(for: .seconds(1.8))
+            withAnimation(Motion.quick) { showDayComplete = false }
+        }
+    }
+}
+
+/// "4 / 8" en números finos y la barra del día.
+private struct DayProgressHeader: View {
+    let done: Int
+    let total: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
+                Text("\(done)")
+                    .font(.numeral(64))
+                    .foregroundStyle(.bone)
+                    .contentTransition(.numericText(value: Double(done)))
+                Text("/ \(total)")
+                    .font(.numeral(28, weight: .thin))
+                    .foregroundStyle(.ash)
+                Spacer()
+                Text(done == total ? "Día completo" : "Hechos hoy")
+                    .labelCaps(12, .semibold, color: done == total ? .bone : .ash)
+            }
+            .monospacedDigit()
+            QuantityBar(progress: total == 0 ? 0 : Double(done) / Double(total))
+        }
+        .animation(Motion.quick, value: done)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(done) de \(total) hábitos hechos hoy")
     }
 }
 
@@ -118,4 +191,5 @@ enum HabitsRoute: Hashable {
 #Preview {
     HabitsHomeView()
         .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
 }

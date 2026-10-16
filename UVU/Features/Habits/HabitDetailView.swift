@@ -11,39 +11,41 @@ struct HabitDetailView: View {
 
     var body: some View {
         let evaluator = HabitEvaluator(habit: habit)
+        let current = evaluator.currentStreak()
+        let best = evaluator.bestStreak()
 
         List {
             Section {
-                HStack(spacing: 14) {
+                HStack(spacing: Space.m) {
                     SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex, size: 52)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(habit.name)
-                            .font(.title3.bold())
+                    VStack(alignment: .leading, spacing: Space.xxs) {
                         Text("\(habit.frequencyDescription) · \(habit.goalDescription)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.uiCallout)
+                            .foregroundStyle(.bone)
                         if let reminder = reminderText {
                             Label(reminder, systemImage: "bell.fill")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .labelCaps(11, .semibold)
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Space.xxs)
+                .rowSurface()
             }
 
-            Section("Estadísticas") {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    StatTile(title: "Racha actual", value: "\(evaluator.currentStreak())",
-                             unit: evaluator.streakUnit, symbol: "flame.fill", tint: .orange)
-                    StatTile(title: "Mejor racha", value: "\(evaluator.bestStreak())",
-                             unit: evaluator.streakUnit, symbol: "trophy.fill", tint: .yellow)
-                    StatTile(title: "Esta semana", value: percent(evaluator.weeklyRate()),
-                             unit: "", symbol: "calendar", tint: .blue)
-                    StatTile(title: "Este mes", value: percent(evaluator.monthlyRate()),
-                             unit: "", symbol: "chart.bar.fill", tint: .green)
+            Section {
+                StreakCounter(value: current, unit: evaluator.streakUnit,
+                              isRecord: current > 0 && current >= best)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: Space.xs, leading: Space.m, bottom: Space.xs, trailing: Space.m))
+
+                HStack(spacing: Space.xs) {
+                    StatTile(title: "Mejor racha", value: "\(best)", isHighlight: best > 0 && current >= best)
+                    StatTile(title: "Semana", value: percent(evaluator.weeklyRate()))
+                    StatTile(title: "Mes", value: percent(evaluator.monthlyRate()))
                 }
-                .padding(.vertical, 4)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: Space.m, bottom: Space.xs, trailing: Space.m))
             }
 
             Section {
@@ -52,21 +54,27 @@ struct HabitDetailView: View {
                     Button {
                         selectedDay = SelectedDay(date: day)
                     } label: {
-                        CalendarDayCell(date: day, fill: status.fillColor, textColor: status.textColor,
-                                        accessibilityStatus: status.title)
+                        CalendarDayCell(date: day, status: status)
                     }
                     .buttonStyle(.borderless)
                     .disabled(status == .future)
                 }
+                .padding(.vertical, Space.xs)
                 HabitStatusLegend()
+                    .padding(.bottom, Space.xs)
             } footer: {
                 Text("Toca un día para marcarlo o corregirlo.")
+                    .font(.uiFootnote)
+                    .foregroundStyle(.ash)
             }
+            .rowSurface()
         }
-        .navigationTitle(habit.name)
+        .screenBackground()
+        .navigationTitle(habit.name.uppercased())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button("Editar") { showEdit = true }
+                .font(.ui(16, .semibold))
         }
         .sheet(isPresented: $showEdit) {
             HabitFormView(habit: habit, onArchive: { dismiss() })
@@ -78,7 +86,7 @@ struct HabitDetailView: View {
 
     private var reminderText: String? {
         guard let times = habit.remindersDescription else { return nil }
-        return habit.reminderMinutes.count == 1 ? "Recordatorio: \(times)" : "Recordatorios: \(times)"
+        return habit.reminderMinutes.count == 1 ? "Recordatorio \(times)" : "Recordatorios \(times)"
     }
 
     private func percent(_ value: Double?) -> String {
@@ -87,45 +95,27 @@ struct HabitDetailView: View {
     }
 }
 
-/// Recuadro con un número grande y su descripción.
+/// Recuadro con un número fino y su etiqueta. `isHighlight` pinta la etiqueta en `brass` (récord).
 struct StatTile: View {
     let title: String
     let value: String
-    let unit: String
-    let symbol: String
-    let tint: Color
+    var isHighlight = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label(title, systemImage: symbol)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .labelStyle(TintedIconLabelStyle(tint: tint))
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(value)
-                    .font(.title2.bold())
-                    .monospacedDigit()
-                if !unit.isEmpty {
-                    Text(unit)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
+        VStack(alignment: .leading, spacing: Space.xxs) {
+            Text(value)
+                .font(.numeral(34, weight: .thin, relativeTo: .title1))
+                .monospacedDigit()
+                .foregroundStyle(.bone)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Text(title)
+                .labelCaps(10, .semibold, color: isHighlight ? .brass : .ash)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .cardSurface(padding: Space.s)
         .accessibilityElement(children: .combine)
-    }
-}
-
-private struct TintedIconLabelStyle: LabelStyle {
-    let tint: Color
-
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 4) {
-            configuration.icon.foregroundStyle(tint)
-            configuration.title
-        }
     }
 }

@@ -9,21 +9,32 @@ struct TasksHomeView: View {
             List {
                 Section {
                     ForEach(lists) { list in
-                        HStack(spacing: 12) {
+                        HStack(spacing: Space.s) {
                             SymbolBadge(symbol: list.symbol, colorHex: list.colorHex)
                             Text(list.name)
+                                .font(.ui(16, .semibold))
+                                .textCase(.uppercase)
+                                .foregroundStyle(.bone)
                             Spacer()
                             Text("\(list.pendingCount)")
-                                .foregroundStyle(.secondary)
+                                .font(.numeral(22, weight: .thin, relativeTo: .title3))
+                                .monospacedDigit()
+                                .foregroundStyle(.ash)
                         }
+                        .rowSurface()
                     }
                 } header: {
-                    Text("Mis listas")
-                } footer: {
-                    Text("Tareas, recordatorios y notificaciones llegan en la fase 3.")
+                    Text("Mis listas").labelCaps()
+                }
+
+                Section {
+                    RedPoster(text: Quotes.empty, caption: "Tareas y recordatorios llegan en la fase 3", minHeight: 180)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
                 }
             }
-            .navigationTitle("Tareas")
+            .screenBackground()
+            .navigationTitle("TAREAS")
         }
     }
 }
@@ -31,4 +42,5 @@ struct TasksHomeView: View {
 #Preview {
     TasksHomeView()
         .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
 }

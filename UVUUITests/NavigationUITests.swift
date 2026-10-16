@@ -10,32 +10,32 @@ final class NavigationUITests: XCTestCase {
         app = XCUIApplication()
         app.launch()
         app.tabBars.buttons["Hábitos"].tap()
-        XCTAssertTrue(app.navigationBars["Hábitos"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["HÁBITOS"].waitForExistence(timeout: 10))
     }
 
     func testGeneralCalendarOpensAndGoesBack() {
         app.buttons["Calendario general"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Calendario general"].waitForExistence(timeout: 10),
+        XCTAssertTrue(app.navigationBars["CALENDARIO"].waitForExistence(timeout: 10),
                       "El calendario general no se abrió")
 
-        app.navigationBars["Calendario general"].buttons.firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Hábitos"].waitForExistence(timeout: 10),
+        app.navigationBars["CALENDARIO"].buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["HÁBITOS"].waitForExistence(timeout: 10),
                       "No se pudo volver a Hábitos")
     }
 
     func testHabitDetailOpensAndGoesBack() {
-        app.staticTexts["Lectura"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Lectura"].waitForExistence(timeout: 10),
+        app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Lectura")).firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["LECTURA"].waitForExistence(timeout: 10),
                       "El detalle del hábito no se abrió")
 
-        app.navigationBars["Lectura"].buttons.firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Hábitos"].waitForExistence(timeout: 10))
+        app.navigationBars["LECTURA"].buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["HÁBITOS"].waitForExistence(timeout: 10))
     }
 
     func testArchivedOpensFromMenu() {
         app.buttons["Más opciones"].firstMatch.tap()
         app.buttons["Archivados"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Archivados"].waitForExistence(timeout: 10),
+        XCTAssertTrue(app.navigationBars["ARCHIVADOS"].waitForExistence(timeout: 10),
                       "Archivados no se abrió")
     }
 }

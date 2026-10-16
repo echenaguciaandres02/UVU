@@ -7,6 +7,18 @@ struct UVUApp: App {
     let container: ModelContainer
 
     init() {
+        Appearance.configure()
+
+        #if DEBUG
+        // Capturas automáticas: datos de ejemplo en memoria, sin tocar la base real.
+        if LaunchOptions.demoData {
+            container = DataStore.makeContainer(inMemory: true)
+            SeedData.seed(context: container.mainContext)
+            DemoData.populate(context: container.mainContext)
+            return
+        }
+        #endif
+
         container = DataStore.makeContainer()
         SeedData.seedIfNeeded(context: container.mainContext)
         if DataUpgrades.run(context: container.mainContext) {
@@ -17,9 +29,33 @@ struct UVUApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            rootView
                 .environment(\.locale, AppLocale.spanish)
+                .preferredColorScheme(.dark)
+                .tint(.signal)
+                .background(Color.ink.ignoresSafeArea())
         }
         .modelContainer(container)
     }
+
+    @ViewBuilder
+    private var rootView: some View {
+        #if DEBUG
+        if LaunchOptions.gallery {
+            DesignSystemGallery()
+        } else {
+            RootTabView()
+        }
+        #else
+        RootTabView()
+        #endif
+    }
 }
+
+#if DEBUG
+/// Argumentos de arranque que usan las pruebas de interfaz.
+enum LaunchOptions {
+    static var gallery: Bool { CommandLine.arguments.contains("-uvu-gallery") }
+    static var demoData: Bool { CommandLine.arguments.contains("-uvu-demo-data") }
+}
+#endif

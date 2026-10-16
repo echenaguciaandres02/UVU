@@ -23,39 +23,60 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Gym")
+                    Text("Gym").labelCaps()
                 } footer: {
                     Text("Puedes registrar cada serie en kg o lb. Las gráficas y récords se muestran en esta unidad.")
+                        .formFooter()
                 }
+                .rowSurface()
 
                 Section {
                     Button {
                         export()
                     } label: {
-                        Label("Exportar datos (JSON)", systemImage: "square.and.arrow.up")
+                        Label("Exportar datos", systemImage: "square.and.arrow.up")
                     }
+                    .buttonStyle(.uvuPrimary)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: Space.xs, trailing: 0))
+
                     Button {
                         showImporter = true
                     } label: {
                         Label("Importar respaldo", systemImage: "square.and.arrow.down")
                     }
+                    .buttonStyle(.uvuSecondary)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
                 } header: {
-                    Text("Respaldo")
+                    Text("Respaldo").labelCaps()
                 } footer: {
-                    Text("Guarda el archivo en Archivos, iCloud Drive o envíatelo. Importar reemplaza todos los datos actuales.")
+                    Text("Archivo JSON con todo. Guárdalo en Archivos o iCloud Drive. Importar reemplaza todos los datos actuales.")
+                        .formFooter()
                 }
 
                 Section {
                     LabeledContent("Sincronización con iCloud", value: "Desactivada")
                 } footer: {
                     Text("Requiere una cuenta de Apple Developer. La app ya está preparada para activarla más adelante.")
+                        .formFooter()
                 }
+                .rowSurface()
 
-                Section("Acerca de") {
+                Section {
                     LabeledContent("Versión", value: appVersion)
+                } header: {
+                    Text("Acerca de").labelCaps()
+                }
+                .rowSurface()
+
+                Section {
+                    QuoteCard(text: "Empieza donde estás.")
+                        .listRowBackground(Color.clear)
                 }
             }
-            .navigationTitle("Ajustes")
+            .uvuForm()
+            .navigationTitle("AJUSTES")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -89,6 +110,7 @@ struct SettingsView: View {
                 Text(message.body)
             }
         }
+        .presentationBackground(Color.ink)
     }
 
     private var appVersion: String {

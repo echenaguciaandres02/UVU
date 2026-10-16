@@ -34,20 +34,28 @@ struct HabitFormView: View {
             Form {
                 Section {
                     TextField("Nombre del hábito", text: $name)
+                        .font(.ui(20, .semibold, relativeTo: .title3))
                 }
+                .rowSurface()
 
-                Section("Apariencia") {
+                Section {
                     NavigationLink {
                         SymbolPickerView(selection: $symbol, colorHex: colorHex)
                     } label: {
                         HStack {
                             Text("Ícono")
                             Spacer()
-                            SymbolBadge(symbol: symbol, colorHex: colorHex, size: 28)
+                            SymbolBadge(symbol: symbol, colorHex: colorHex, size: 32)
                         }
                     }
                     ColorPaletteView(selection: $colorHex)
+                } header: {
+                    Text("Apariencia").labelCaps()
+                } footer: {
+                    Text("El color se ve apagado, solo en el ícono. El rojo queda para lo completado.")
+                        .formFooter()
                 }
+                .rowSurface()
 
                 Section {
                     Picker("Tipo", selection: $kind) {
@@ -74,14 +82,16 @@ struct HabitFormView: View {
                         }
                     }
                 } header: {
-                    Text("Tipo")
+                    Text("Tipo").labelCaps()
                 } footer: {
                     Text(kind == .binary
                          ? "Se marca con un toque: hecho o no hecho."
                          : "Registras una cantidad y se cumple al llegar a la meta.")
+                        .formFooter()
                 }
+                .rowSurface()
 
-                Section("Frecuencia") {
+                Section {
                     Picker("Frecuencia", selection: $frequency) {
                         ForEach(HabitFrequency.allCases) { frequency in
                             Text(frequency.title).tag(frequency)
@@ -96,7 +106,10 @@ struct HabitFormView: View {
                         Stepper(timesPerWeek == 1 ? "1 vez por semana" : "\(timesPerWeek) veces por semana",
                                 value: $timesPerWeek, in: 1...7)
                     }
+                } header: {
+                    Text("Frecuencia").labelCaps()
                 }
+                .rowSurface()
 
                 Section {
                     ForEach($reminders) { $reminder in
@@ -108,29 +121,38 @@ struct HabitFormView: View {
                         Button {
                             addReminder()
                         } label: {
-                            Label("Agregar recordatorio", systemImage: "plus.circle.fill")
+                            Label("Agregar recordatorio", systemImage: "plus")
+                                .fontWeight(.semibold)
                         }
                         Button {
                             showSpread = true
                         } label: {
                             Label("Repartir durante el día…", systemImage: "clock.arrow.2.circlepath")
+                                .fontWeight(.semibold)
                         }
                     }
                 } header: {
-                    Text("Recordatorios")
+                    Text("Recordatorios").labelCaps()
                 } footer: {
                     Text(remindersFooter)
+                        .formFooter()
                 }
+                .rowSurface()
 
                 if habit != nil {
                     Section {
                         Button("Archivar hábito") { confirmArchive = true }
+                            .buttonStyle(.uvuSecondary)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets())
                     } footer: {
                         Text("Deja de aparecer pero conserva su historial. Puedes restaurarlo o eliminarlo desde Hábitos → ⋯ → Archivados.")
+                            .formFooter()
                     }
                 }
             }
-            .navigationTitle(habit == nil ? "Nuevo hábito" : "Editar hábito")
+            .uvuForm()
+            .navigationTitle(habit == nil ? "NUEVO HÁBITO" : "EDITAR HÁBITO")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -1,34 +1,41 @@
 import SwiftUI
 
-/// Paleta de colores para elegir el color de un hábito, lista o rutina.
+/// Paleta de colores para elegir el color de un hábito, lista o rutina (se muestran apagados,
+/// como se verán en la app).
 struct ColorPaletteView: View {
     @Binding var selection: String
 
-    private let columns = Array(repeating: GridItem(.flexible()), count: 6)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: Space.s), count: 6)
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
+        LazyVGrid(columns: columns, spacing: Space.s) {
             ForEach(AppPalette.colors, id: \.self) { hex in
+                let isSelected = selection == hex
                 Button {
                     selection = hex
                 } label: {
-                    Circle()
-                        .fill(Color(hex: hex))
-                        .frame(width: 32, height: 32)
+                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                        .fill(Color.muted(hex: hex))
+                        .frame(height: 34)
                         .overlay {
-                            if selection == hex {
+                            RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                                .strokeBorder(isSelected ? Color.bone : .clear, lineWidth: 2)
+                                .padding(-4)
+                        }
+                        .overlay {
+                            if isSelected {
                                 Image(systemName: "checkmark")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.white)
+                                    .font(.system(size: 13, weight: .black))
+                                    .foregroundStyle(.ink)
                             }
                         }
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Color")
-                .accessibilityAddTraits(selection == hex ? .isSelected : [])
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Space.xs)
     }
 }
 
@@ -37,29 +44,33 @@ struct WeekdayPicker: View {
     @Binding var selection: Set<Int>
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Space.xxs) {
             ForEach(AppCalendar.orderedWeekdays, id: \.self) { weekday in
                 let isOn = selection.contains(weekday)
+                let shape = RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
                 Button {
-                    if isOn {
-                        selection.remove(weekday)
-                    } else {
-                        selection.insert(weekday)
+                    withAnimation(Motion.quick) {
+                        if isOn {
+                            selection.remove(weekday)
+                        } else {
+                            selection.insert(weekday)
+                        }
                     }
                 } label: {
                     Text(AppCalendar.veryShortWeekdayName(weekday))
-                        .font(.subheadline.weight(.semibold))
-                        .frame(width: 38, height: 38)
-                        .background(isOn ? Color.accentColor : Color(.tertiarySystemFill), in: Circle())
-                        .foregroundStyle(isOn ? Color.white : Color.primary)
+                        .font(.ui(16, .black, relativeTo: .callout))
+                        .textCase(.uppercase)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .foregroundStyle(isOn ? Color.ink : .bone)
+                        .background(isOn ? Color.signal : .clear, in: shape)
+                        .overlay { shape.strokeBorder(isOn ? Color.signal : .graphite, lineWidth: Stroke.hairline) }
                 }
                 .buttonStyle(.borderless)
-                .frame(maxWidth: .infinity)
                 .accessibilityLabel(AppCalendar.calendar.weekdaySymbols[weekday - 1])
                 .accessibilityAddTraits(isOn ? .isSelected : [])
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Space.xxs)
     }
 }
 
@@ -79,50 +90,35 @@ struct SymbolPickerView: View {
         "laptopcomputer", "music.note", "guitars.fill", "paintbrush.fill", "camera.fill", "globe",
         "person.2.fill", "phone.fill", "message.fill", "house.fill", "cart.fill", "banknote.fill",
         "clock.fill", "alarm.fill", "timer", "hourglass", "calendar", "checklist",
-        "shower.fill", "tshirt.fill", "pawprint.fill", "water.waves", "face.smiling", "hand.thumbsup.fill",
+        "shower.fill", "tshirt.fill", "pawprint.fill", "water.waves", "figure.boxing", "figure.pool.swim",
     ]
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52))], spacing: 14) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: Space.s)], spacing: Space.s) {
                 ForEach(Self.symbols, id: \.self) { symbol in
+                    let isSelected = selection == symbol
                     Button {
                         selection = symbol
                         dismiss()
                     } label: {
-                        SymbolBadge(symbol: symbol, colorHex: selection == symbol ? colorHex : "8E8E93", size: 46)
+                        SymbolBadge(symbol: symbol, colorHex: isSelected ? colorHex : "8C8C8C", size: 48)
+                            .overlay {
+                                if isSelected {
+                                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                                        .strokeBorder(.bone, lineWidth: 2)
+                                }
+                            }
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(symbol)
-                    .accessibilityAddTraits(selection == symbol ? .isSelected : [])
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
-            .padding()
+            .padding(Space.m)
         }
+        .background(Color.ink.ignoresSafeArea())
         .navigationTitle("Ícono")
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-/// Anillo de progreso (para hábitos cuantitativos).
-struct ProgressRing: View {
-    let progress: Double
-    let color: Color
-    var lineWidth: CGFloat = 4
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(color.opacity(0.2), lineWidth: lineWidth)
-            Circle()
-                .trim(from: 0, to: min(max(progress, 0), 1))
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            if progress >= 1 {
-                Image(systemName: "checkmark")
-                    .font(.caption.bold())
-                    .foregroundStyle(color)
-            }
-        }
     }
 }

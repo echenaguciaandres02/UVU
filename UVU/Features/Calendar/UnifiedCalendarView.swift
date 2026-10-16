@@ -5,12 +5,16 @@ struct UnifiedCalendarView: View {
 
     var body: some View {
         NavigationStack {
-            ContentUnavailableView(
-                "Calendario",
-                systemImage: "calendar",
-                description: Text("Hábitos, entrenos, tareas y journal de cada día. Se completa en la fase 6.")
-            )
-            .navigationTitle("Calendario")
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.l) {
+                    PosterHeader(title: "Calendario.", subtitle: "Todo tu mes en un lugar", size: 56)
+                    RedPoster(text: Quotes.empty,
+                              caption: "Hábitos, entrenos, tareas y journal por día: fase 6",
+                              minHeight: 200)
+                }
+                .padding(Space.m)
+            }
+            .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -18,9 +22,11 @@ struct UnifiedCalendarView: View {
                 }
             }
         }
+        .presentationBackground(Color.ink)
     }
 }
 
 #Preview {
     UnifiedCalendarView()
+        .preferredColorScheme(.dark)
 }
