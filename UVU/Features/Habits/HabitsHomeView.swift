@@ -174,7 +174,7 @@ private struct DayProgressHeader: View {
                     .labelCaps(12, .semibold, color: done == total ? .bone : .ash)
             }
             .monospacedDigit()
-            QuantityBar(progress: total == 0 ? 0 : Double(done) / Double(total))
+            QuantityBar(progress: total == 0 ? 0 : Double(done) / Double(total), accent: true)
         }
         .animation(Motion.quick, value: done)
         .accessibilityElement(children: .ignore)

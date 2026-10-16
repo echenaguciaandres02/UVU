@@ -32,7 +32,7 @@ struct UVUApp: App {
             rootView
                 .environment(\.locale, AppLocale.spanish)
                 .preferredColorScheme(.dark)
-                .tint(.signal)
+                .tint(.bone)
                 .background(Color.ink.ignoresSafeArea())
         }
         .modelContainer(container)

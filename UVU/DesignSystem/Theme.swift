@@ -74,8 +74,10 @@ extension View {
     }
 
     /// Fondo de pantalla `ink` para listas y formularios (quita el gris agrupado del sistema).
+    /// Estilo agrupado de borde a borde: filas rectas, sin las tarjetas muy redondeadas de iOS.
     func screenBackground() -> some View {
         self
+            .listStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(Color.ink.ignoresSafeArea())
     }

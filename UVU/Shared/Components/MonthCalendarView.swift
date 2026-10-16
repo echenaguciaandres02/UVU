@@ -143,13 +143,18 @@ struct CalendarDayCell: View {
 
     var body: some View {
         let isToday = AppCalendar.calendar.isDateInToday(date)
-        Text("\(AppCalendar.calendar.component(.day, from: date))")
-            .font(.ui(15, isToday ? .black : .semibold, relativeTo: .callout))
-            .monospacedDigit()
-            .foregroundStyle(status.numberColor)
-            .frame(maxWidth: .infinity)
+        StatusSwatch(status: status)
             .aspectRatio(1, contentMode: .fit)
-            .background { StatusSwatch(status: status) }
+            .frame(maxWidth: .infinity)
+            .overlay {
+                Text("\(AppCalendar.calendar.component(.day, from: date))")
+                    .font(.ui(15, isToday ? .black : .semibold, relativeTo: .callout))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .foregroundStyle(status.numberColor)
+                    .padding(2)
+            }
             .overlay {
                 if isToday || isSelected {
                     RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
@@ -198,17 +203,19 @@ struct HabitStatusLegend: View {
     private let items: [HabitDayStatus] = [.completed, .partial, .failed, .notApplicable]
 
     var body: some View {
-        HStack(spacing: Space.m) {
+        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                  alignment: .leading, spacing: Space.xs) {
             ForEach(items, id: \.title) { status in
-                HStack(spacing: Space.xxs) {
+                HStack(spacing: Space.xs) {
                     StatusSwatch(status: status)
-                        .frame(width: 12, height: 12)
+                        .frame(width: 14, height: 14)
                     Text(status.title)
                         .labelCaps(10, .semibold)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
         }
-        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
     }
 }

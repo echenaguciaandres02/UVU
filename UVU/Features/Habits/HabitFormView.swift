@@ -31,7 +31,7 @@ struct HabitFormView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 Section {
                     TextField("Nombre del hábito", text: $name)
                         .font(.ui(20, .semibold, relativeTo: .title3))

@@ -45,21 +45,28 @@ struct HabitCheckbox: View {
     }
 }
 
-/// Barra de progreso recta (hábitos cuantitativos).
+/// Barra de progreso recta. En las filas va en hueso (el rojo queda para el checkbox);
+/// `accent: true` la pinta en rojo, para el único progreso dominante de una pantalla.
 struct QuantityBar: View {
     let progress: Double
+    var accent = false
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 Rectangle().fill(.graphite)
                 Rectangle()
-                    .fill(progress >= 1 ? Color.signal : .signalDeep)
+                    .fill(fill)
                     .frame(width: proxy.size.width * min(max(progress, 0), 1))
             }
         }
         .frame(height: 3)
         .accessibilityHidden(true)
+    }
+
+    private var fill: Color {
+        if accent { return progress >= 1 ? .signal : .signalDeep }
+        return progress >= 1 ? .bone : .ash
     }
 }
 

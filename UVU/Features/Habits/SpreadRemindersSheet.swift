@@ -25,7 +25,7 @@ struct SpreadRemindersSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 Section {
                     DatePicker("Desde", selection: $start, displayedComponents: .hourAndMinute)
                     DatePicker("Hasta", selection: $end, displayedComponents: .hourAndMinute)

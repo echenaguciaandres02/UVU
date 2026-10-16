@@ -15,7 +15,7 @@ struct HabitDayEditorSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 Section {
                     HStack(spacing: Space.s) {
                         SymbolBadge(symbol: habit.symbol, colorHex: habit.colorHex, size: 44)

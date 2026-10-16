@@ -26,7 +26,7 @@ struct HabitRowView: View {
                     .textCase(.uppercase)
                     .tracking(0.6)
                     .foregroundStyle(isDone ? Color.ash : .bone)
-                    .lineLimit(2)
+                    .lineLimit(3)
                 HStack(spacing: Space.xs) {
                     Text(subtitle(value: value, isDone: isDone))
                     if streak > 0 {
