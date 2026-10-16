@@ -5,37 +5,51 @@ import SwiftUI
 struct ColorPaletteView: View {
     @Binding var selection: String
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: Space.s), count: 6)
+    private let perRow = 6
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: Space.s) {
-            ForEach(AppPalette.colors, id: \.self) { hex in
-                let isSelected = selection == hex
-                Button {
-                    selection = hex
-                } label: {
-                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
-                        .fill(Color.muted(hex: hex))
-                        .frame(height: 34)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
-                                .strokeBorder(isSelected ? Color.bone : .clear, lineWidth: 2)
-                                .padding(-4)
+        // Filas fijas (no LazyVGrid): dentro de un formulario evita ciclos de cálculo de altura.
+        VStack(spacing: Space.s) {
+            ForEach(Array(stride(from: 0, to: AppPalette.colors.count, by: perRow)), id: \.self) { start in
+                HStack(spacing: Space.s) {
+                    ForEach(start..<start + perRow, id: \.self) { index in
+                        if index < AppPalette.colors.count {
+                            swatch(AppPalette.colors[index])
+                        } else {
+                            Color.clear.frame(maxWidth: .infinity).frame(height: 34)
                         }
-                        .overlay {
-                            if isSelected {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 13, weight: .black))
-                                    .foregroundStyle(.ink)
-                            }
-                        }
+                    }
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Color")
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
         .padding(.vertical, Space.xs)
+    }
+
+    private func swatch(_ hex: String) -> some View {
+        let isSelected = selection == hex
+        return Button {
+            selection = hex
+        } label: {
+            RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                .fill(Color.muted(hex: hex))
+                .frame(height: 34)
+                .overlay {
+                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                        .strokeBorder(isSelected ? Color.bone : .clear, lineWidth: 2)
+                        .padding(-4)
+                }
+                .overlay {
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(.ink)
+                    }
+                }
+        }
+        .buttonStyle(.borderless)
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("Color")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

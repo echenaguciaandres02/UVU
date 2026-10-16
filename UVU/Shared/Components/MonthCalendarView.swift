@@ -12,7 +12,6 @@ struct MonthCalendarView<DayContent: View>: View {
     }
 
     private var calendar: Calendar { AppCalendar.calendar }
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: Space.xxs), count: 7)
 
     var body: some View {
         VStack(spacing: Space.s) {
@@ -42,23 +41,41 @@ struct MonthCalendarView<DayContent: View>: View {
             .buttonStyle(.borderless)
             .foregroundStyle(.bone)
 
-            LazyVGrid(columns: columns, spacing: Space.xxs) {
-                ForEach(AppCalendar.orderedWeekdays, id: \.self) { weekday in
-                    Text(AppCalendar.veryShortWeekdayName(weekday))
-                        .labelCaps(11, .semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, Space.xxs)
+            // Cuadrícula fija (no perezosa): dentro de una List, una LazyVGrid puede entrar en un
+            // ciclo infinito de cálculo de alturas y cerrar la app.
+            VStack(spacing: Space.xxs) {
+                HStack(spacing: Space.xxs) {
+                    ForEach(AppCalendar.orderedWeekdays, id: \.self) { weekday in
+                        Text(AppCalendar.veryShortWeekdayName(weekday))
+                            .labelCaps(11, .semibold)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                ForEach(0..<leadingBlanks, id: \.self) { index in
-                    Color.clear
-                        .frame(height: 1)
-                        .id("blank-\(index)")
-                }
-                ForEach(days, id: \.self) { day in
-                    dayContent(day)
+                .padding(.bottom, Space.xxs)
+
+                ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+                    HStack(spacing: Space.xxs) {
+                        ForEach(0..<7, id: \.self) { index in
+                            if let day = week[index] {
+                                dayContent(day)
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                Color.clear
+                                    .aspectRatio(1, contentMode: .fit)
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    /// Semanas del mes, de lunes a domingo; `nil` en los huecos antes del día 1 y después del último.
+    private var weeks: [[Date?]] {
+        var cells: [Date?] = Array(repeating: nil, count: leadingBlanks) + days.map { Optional($0) }
+        while cells.count % 7 != 0 { cells.append(nil) }
+        return stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<$0 + 7]) }
     }
 
     private var title: String {
@@ -203,20 +220,28 @@ struct HabitStatusLegend: View {
     private let items: [HabitDayStatus] = [.completed, .partial, .failed, .notApplicable]
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
-                  alignment: .leading, spacing: Space.xs) {
-            ForEach(items, id: \.title) { status in
-                HStack(spacing: Space.xs) {
-                    StatusSwatch(status: status)
-                        .frame(width: 14, height: 14)
-                    Text(status.title)
-                        .labelCaps(10, .semibold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
+        Grid(alignment: .leading, horizontalSpacing: Space.m, verticalSpacing: Space.xs) {
+            GridRow {
+                item(items[0])
+                item(items[1])
+            }
+            GridRow {
+                item(items[2])
+                item(items[3])
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+
+    private func item(_ status: HabitDayStatus) -> some View {
+        HStack(spacing: Space.xs) {
+            StatusSwatch(status: status)
+                .frame(width: 14, height: 14)
+            Text(status.title)
+                .labelCaps(10, .semibold)
+                .fixedSize()
+        }
     }
 }
 
