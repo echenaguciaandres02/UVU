@@ -1,7 +1,8 @@
 # Contexto del proyecto UVU (para continuar en otro chat)
 
-Resumen de todo lo hablado y hecho hasta el 16 de octubre de 2026. Pégalo al inicio de un chat
-nuevo con Claude (o pídele que lea este archivo) para continuar sin perder contexto.
+Resumen de todo lo hablado y hecho hasta el 16 de octubre de 2026 (incluye el sistema visual
+DISCIPLINE, sección 7). Pégalo al inicio de un chat nuevo con Claude (o pídele que lea este archivo)
+para continuar sin perder contexto.
 
 ---
 
@@ -78,7 +79,10 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
 
 ## 4. Decisiones tomadas
 
-- **Nombre:** UVU. Bundle ID `com.uvu.app`. Ícono provisional: degradado azul-violeta con "UVU".
+- **Nombre:** UVU. Bundle ID `com.uvu.app`. Ícono: un toro negro sobre fondo rojo; es una imagen
+  que elegí yo y se usa tal cual, sin modificar.
+- **Estética:** sistema visual "DISCIPLINE", **solo modo oscuro**. Esto reemplaza el "modo claro
+  y oscuro" de la especificación original. Ver la sección 7.
 - **Arquitectura:** MVVM ligero. Las vistas simples usan `@Query` y `modelContext`; las pantallas
   complejas, un ViewModel `@Observable`; la lógica de negocio va en `Services/` y tiene tests.
 - **Modelos compatibles con CloudKit:** todas las propiedades tienen valor por defecto, las relaciones
@@ -129,10 +133,12 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
      los `navigationDestination(isPresented:)`; ahora se usa `NavigationStack(path:)` con
      `enum HabitsRoute`.
   - Además, las notificaciones se ven con la app abierta (`AppDelegate` + `NotificationDelegate`).
-- El último `UVU.ipa` (fase 2b) está en `Descargas\CLAUDE`. **Todavía no confirmé que funcione en mi
-  iPhone.**
+- **Sistema visual DISCIPLINE** (sección 7), aplicado a todas las pantallas que existen hoy.
+  Se revisó con capturas automáticas del simulador. 25 tests en verde.
+- El último `UVU.ipa` (fase 2b + DISCIPLINE) está en `Descargas\CLAUDE`. **Todavía no confirmé
+  cómo se ve en mi iPhone.**
 
-**Siguiente:** confirmar la fase 2b en el iPhone y luego **fase 3: tareas y notificaciones**
+**Siguiente:** probar el estilo nuevo en el iPhone y luego **fase 3: tareas y notificaciones**
 (categorías de notificación con acciones "Completar" y "Posponer 1 hora", recurrencias y deslizar
 para completar o borrar).
 
@@ -144,6 +150,8 @@ para completar o borrar).
 - `NotificationService.rescheduleAll` borra **todas** las notificaciones pendientes y solo vuelve a
   crear las de hábitos. En la fase 3 debe reprogramar también las de tareas.
 - Widgets (fase 7) necesitan App Group: con firma gratuita puede no funcionar; se verá en esa fase.
+- Los números de los días completados (texto negro sobre rojo) tienen contraste 3,9:1. Cumple AA
+  solo para texto grande; VoiceOver lee la fecha y el estado completos.
 
 ## 6. Estructura del código
 
@@ -172,3 +180,73 @@ Modelos SwiftData:
 - **Journal:** `JournalEntry`, `PromptAnswer`, `JournalTag` (relación muchos a muchos).
 - **Gym:** `Exercise`, `Routine`, `RoutineExercise`, `WorkoutSession`, `SessionExercise`,
   `WorkoutSet` (con `unitRaw` kg/lb).
+
+## 7. Sistema visual "DISCIPLINE"
+
+La especificación completa está en mi archivo `UVU_prompt_estetica.md`; las imágenes de referencia
+fueron collages de Pinterest. Resumen:
+
+**La vibra.** Disciplina, 4:00 AM, gimnasio vacío, "nadie está mirando". Póster brutalista en papel
+rojo, fotocopia en blanco y negro con grano. Crudeza (boxeo, táctico, outdoor) mezclada con lujo
+sobrio. Nada de colores alegres ni estilo "app de bienestar".
+
+**Paleta** (Asset Catalog `Colors/` + `DesignSystem/Theme.swift`, solo modo oscuro):
+
+| Token | Hex | Uso |
+|---|---|---|
+| `ink` | #0A0A0A | Fondo principal |
+| `carbon` | #151515 | Superficies y filas |
+| `graphite` | #2A2A2A | Bordes de 1 pt, separadores |
+| `ash` | #8C8C8C | Texto secundario |
+| `bone` | #E9E3D6 | Texto principal (nunca blanco puro) |
+| `signal` | #D42A20 | Acento único: completado, acción principal, progreso del día |
+| `signalDeep` | #8E1B14 | Parcial, presionado |
+| `brass` | #B08D57 | Solo récords e hitos |
+
+**Reglas:**
+- El rojo es el único color con volumen: máximo un elemento rojo dominante por pantalla.
+- Completado = rojo lleno; pendiente = contorno `graphite`. No se usa verde.
+- Nunca texto pequeño rojo sobre negro.
+- El acento del sistema (`.tint`) es `bone`.
+
+**Mis decisiones al revisar el plan:**
+- El color de cada hábito se mantiene, **apagado** (`Color.muted(hex:)`) y solo en el ícono.
+- En los calendarios, el día fallado es un cuadro `carbon` **tachado**.
+- Las barras del sistema (pestañas y barra superior) conservan el Liquid Glass de iOS 26; el
+  contenido es plano.
+
+**Tipografía** (fuentes OFL en `Resources/Fonts`, `DesignSystem/Typography.swift`):
+
+| Fuente | Uso |
+|---|---|
+| Anton | Titulares y pósters, siempre en mayúsculas (`.posterTitle()`) |
+| Inter Regular / SemiBold / Black | Texto y botones; etiquetas en mayúsculas con tracking amplio (`.labelCaps()`) |
+| Cormorant Garamond | Frases editoriales (`QuoteCard`) |
+| SF Pro ultraligera | Números grandes (`.numeral()`) |
+
+Todas las fuentes respetan el tamaño de texto del sistema (Dynamic Type).
+
+**Forma:**
+- Esquinas de 2–4 pt.
+- Listas y formularios con estilo `.grouped` de borde a borde: iOS 26 redondea mucho las tarjetas
+  `.insetGrouped`.
+- Grano sutil (`GrainOverlay`) en los pósters rojos.
+
+**Componentes** (`UVU/DesignSystem/Components/`):
+- `PosterHeader`, `RedPoster`, `TapeLabel` ("DO."), `QuoteCard`, `DayCompleteOverlay`.
+- `HabitCheckbox`: cuadrado que se "estampa" en rojo con vibración `.heavy`.
+- `QuantityBar` (hueso; roja solo con `accent: true`), `StreakCounter` (etiqueta `brass` si es
+  récord), `UVUButtonStyle` (`.uvuPrimary` / `.uvuSecondary`), `StatusSwatch`.
+- Frases editables en `DesignSystem/Quotes.swift` (frase del día, estado vacío, día completo).
+
+**Verificación visual sin Mac:**
+- `UVUUITests/ScreenshotTests` toma capturas de la galería (`DesignSystemGallery`, abierta con
+  `-uvu-gallery`) y de cada pantalla, con datos de ejemplo (`-uvu-demo-data`). Lo hace en tamaño
+  normal y con texto grande.
+- GitHub Actions las sube como artefacto **`Capturas`**.
+
+**Lecciones:**
+- **No usar `LazyVGrid` dentro de una `List`.** Causó un ciclo infinito de cálculo de alturas y la
+  app se cerraba. El calendario y la paleta usan filas fijas (`HStack`/`VStack`/`Grid`).
+- Para cualquier pantalla nueva: fondo con `.screenBackground()` y filas con `.rowSurface()`.
+  Formularios con `List` + `.uvuForm()`. Encabezados con `Text(...).labelCaps()`.

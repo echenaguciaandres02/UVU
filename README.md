@@ -149,6 +149,7 @@ interfaz, para poder probarla con tests.
 
 - [x] Fase 1: proyecto, navegación, modelos de datos, exportar/importar
 - [x] Fase 2: hábitos + calendario
+- [x] Sistema visual "DISCIPLINE" (solo modo oscuro; ver `CONTEXTO.md`, sección 7)
 - [ ] Fase 3: tareas y notificaciones
 - [ ] Fase 4: journal
 - [ ] Fase 5: gym
