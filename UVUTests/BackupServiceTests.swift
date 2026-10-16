@@ -23,7 +23,7 @@ final class BackupServiceTests: XCTestCase {
         restored.exportedAt = original.exportedAt
 
         XCTAssertEqual(restored, original)
-        XCTAssertEqual(original.habits.count, 5)
+        XCTAssertEqual(original.habits.count, 8)
         XCTAssertEqual(original.journalEntries.first?.tags, ["gym", "tesis"])
         XCTAssertEqual(original.sessions.first?.exercises.first?.sets.count, 2)
     }

@@ -148,7 +148,7 @@ interfaz, para poder probarla con tests.
 ## Fases
 
 - [x] Fase 1: proyecto, navegación, modelos de datos, exportar/importar
-- [ ] Fase 2: hábitos + calendario
+- [x] Fase 2: hábitos + calendario
 - [ ] Fase 3: tareas y notificaciones
 - [ ] Fase 4: journal
 - [ ] Fase 5: gym

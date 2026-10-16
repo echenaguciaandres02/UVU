@@ -64,9 +64,10 @@ jobs:
                       print(device["udid"]); sys.exit()
           ')
           echo "Simulador: $UDID"
+          set -o pipefail
           xcodebuild test \
             -project UVU.xcodeproj \
             -scheme UVU \
             -destination "id=$UDID" \
             CODE_SIGNING_ALLOWED=NO \
-            -quiet
+            | grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* TEST"

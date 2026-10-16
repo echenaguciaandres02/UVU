@@ -128,6 +128,7 @@ struct SettingsView: View {
     private func restore(_ backup: BackupFile) {
         do {
             try BackupService.restore(backup, into: context)
+            Task { await NotificationService.rescheduleAll(context: context) }
             message = SettingsMessage(title: "Respaldo importado", body: backup.summary)
         } catch {
             message = SettingsMessage(title: "No se pudo importar", body: error.localizedDescription)

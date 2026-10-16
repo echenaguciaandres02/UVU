@@ -5,16 +5,45 @@ import SwiftData
 @MainActor
 enum SeedData {
     private static let seededKey = "uvu.seeded.v1"
+    private static let habitsV2Key = "uvu.seeded.v2.habits"
 
-    /// Carga los datos iniciales solo la primera vez que se abre la app.
+    /// Carga los datos iniciales solo la primera vez que se abre la app, y agrega
+    /// a una instalación existente los hábitos precargados que se sumaron después.
     static func seedIfNeeded(context: ModelContext, defaults: UserDefaults = .standard) {
-        guard !defaults.bool(forKey: seededKey) else { return }
-        seed(context: context)
-        defaults.set(true, forKey: seededKey)
+        if !defaults.bool(forKey: seededKey) {
+            seed(context: context)
+            defaults.set(true, forKey: seededKey)
+            defaults.set(true, forKey: habitsV2Key)
+        } else if !defaults.bool(forKey: habitsV2Key) {
+            addMissingHabits(habitsAddedInV2(), context: context)
+            defaults.set(true, forKey: habitsV2Key)
+        }
+    }
+
+    /// Hábitos que se agregaron después de la primera versión.
+    static func habitsAddedInV2() -> [Habit] {
+        [
+            Habit(name: "Tomar creatina", symbol: "pills.fill", colorHex: "00C7BE"),
+            Habit(name: "Proteína", symbol: "fork.knife", colorHex: "FF2D55",
+                  kind: .quantity, target: 130, unit: "g"),
+            Habit(name: "Aprender algo nuevo", symbol: "lightbulb.fill", colorHex: "AF52DE"),
+        ]
+    }
+
+    private static func addMissingHabits(_ newHabits: [Habit], context: ModelContext) {
+        let existing = (try? context.fetch(FetchDescriptor<Habit>())) ?? []
+        let names = Set(existing.map { $0.name.lowercased() })
+        var nextOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
+        for habit in newHabits where !names.contains(habit.name.lowercased()) {
+            habit.sortOrder = nextOrder
+            nextOrder += 1
+            context.insert(habit)
+        }
+        try? context.save()
     }
 
     static func seed(context: ModelContext) {
-        let habits = [
+        var habits = [
             Habit(name: "Ejercicio", symbol: "figure.strengthtraining.traditional", colorHex: "FF9500",
                   sortOrder: 0, systemRole: HabitSystemRole.exercise),
             Habit(name: "Tomar agua", symbol: "drop.fill", colorHex: "007AFF",
@@ -26,7 +55,11 @@ enum SeedData {
             Habit(name: "Lectura", symbol: "book.fill", colorHex: "34C759",
                   kind: .quantity, target: 20, unit: "páginas", sortOrder: 4),
         ]
-        habits.forEach { context.insert($0) }
+        habits += habitsAddedInV2()
+        for (index, habit) in habits.enumerated() {
+            habit.sortOrder = index
+            context.insert(habit)
+        }
 
         let lists = [
             TaskList(name: "Personal", symbol: "person.fill", colorHex: "007AFF", sortOrder: 0),
