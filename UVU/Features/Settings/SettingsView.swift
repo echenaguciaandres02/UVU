@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
+    @AppStorage(TaskSchedule.defaultReminderKey) private var taskReminderMinutes = 9 * 60
 
     @State private var exportFile: ShareableFile?
     @State private var showImporter = false
@@ -16,6 +17,16 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    DatePicker("Aviso de tareas sin hora", selection: taskReminderTime, displayedComponents: .hourAndMinute)
+                } header: {
+                    Text("Tareas").labelCaps()
+                } footer: {
+                    Text("Las tareas con fecha pero sin hora te avisan a esta hora del día límite.")
+                        .formFooter()
+                }
+                .rowSurface()
+
                 Section {
                     Picker("Unidad principal de peso", selection: $weightUnit) {
                         ForEach(WeightUnit.allCases) { unit in
@@ -111,6 +122,16 @@ struct SettingsView: View {
             }
         }
         .presentationBackground(Color.ink)
+    }
+
+    private var taskReminderTime: Binding<Date> {
+        Binding(
+            get: { ReminderTime.date(from: taskReminderMinutes) },
+            set: { newValue in
+                taskReminderMinutes = ReminderTime.minutes(from: newValue)
+                Task { await NotificationService.rescheduleTasks(context: context) }
+            }
+        )
     }
 
     private var appVersion: String {

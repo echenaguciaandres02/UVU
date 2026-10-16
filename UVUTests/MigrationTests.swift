@@ -2,11 +2,65 @@ import XCTest
 import SwiftData
 @testable import UVU
 
-/// Copia exacta de cómo eran los hábitos en la fase 2 (antes de `reminderMinutes`),
-/// guardada con un plan de migración como lo hacía esa versión de la app.
+/// Copia exacta de cómo eran los hábitos y tareas en la fase 2 (antes de `reminderMinutes` y de los
+/// avisos de tareas), guardada con un plan de migración como lo hacía esa versión de la app.
 enum Phase2Schema: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
-    static var models: [any PersistentModel.Type] { [Habit.self, HabitEntry.self] }
+    static var models: [any PersistentModel.Type] {
+        [Habit.self, HabitEntry.self, TaskList.self, TaskItem.self, Subtask.self]
+    }
+
+    @Model
+    final class TaskList {
+        var id: UUID = UUID()
+        var name: String = ""
+        var symbol: String = "list.bullet"
+        var colorHex: String = "007AFF"
+        var sortOrder: Int = 0
+        var createdAt: Date = Date()
+
+        @Relationship(deleteRule: .cascade, inverse: \TaskItem.list)
+        var tasks: [TaskItem]? = []
+
+        init(name: String) {
+            self.name = name
+        }
+    }
+
+    @Model
+    final class TaskItem {
+        var id: UUID = UUID()
+        var title: String = ""
+        var notes: String = ""
+        var dueDate: Date? = nil
+        var hasTime: Bool = false
+        var priorityRaw: Int = 0
+        var recurrenceRaw: String = "none"
+        var isCompleted: Bool = false
+        var completedAt: Date? = nil
+        var createdAt: Date = Date()
+        var list: TaskList?
+
+        @Relationship(deleteRule: .cascade, inverse: \Subtask.task)
+        var subtasks: [Subtask]? = []
+
+        init(title: String) {
+            self.title = title
+        }
+    }
+
+    @Model
+    final class Subtask {
+        var id: UUID = UUID()
+        var title: String = ""
+        var isDone: Bool = false
+        var order: Int = 0
+        var task: TaskItem?
+
+        init(title: String) {
+            self.title = title
+        }
+    }
 
     @Model
     final class Habit {
@@ -80,6 +134,15 @@ final class MigrationTests: XCTestCase {
                 context.insert(entry)
                 entry.habit = habit
             }
+            let list = Phase2Schema.TaskList(name: "Universidad")
+            context.insert(list)
+            let task = Phase2Schema.TaskItem(title: "Entregar capítulo")
+            task.dueDate = Date(timeIntervalSince1970: 1_800_000_000)
+            context.insert(task)
+            task.list = list
+            let subtask = Phase2Schema.Subtask(title: "Bibliografía")
+            context.insert(subtask)
+            subtask.task = task
             try context.save()
         }
 
@@ -95,6 +158,13 @@ final class MigrationTests: XCTestCase {
         XCTAssertEqual(habit.entries?.count, 3)
         XCTAssertEqual(habit.reminderHour, 9)
         XCTAssertEqual(habit.reminderMinutes, [])
+
+        let task = try XCTUnwrap(context.fetch(FetchDescriptor<UVU.TaskItem>()).first)
+        XCTAssertEqual(task.title, "Entregar capítulo")
+        XCTAssertEqual(task.list?.name, "Universidad")
+        XCTAssertEqual(task.subtasks?.first?.title, "Bibliografía")
+        XCTAssertTrue(task.reminderEnabled, "Las tareas antiguas quedan con aviso activado")
+        XCTAssertEqual(task.reminderOffsetMinutes, 0)
 
         // 3. El recordatorio antiguo pasa a la lista nueva.
         DataUpgrades.moveLegacyReminders(context: context)

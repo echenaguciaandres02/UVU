@@ -75,6 +75,10 @@ final class TaskItem {
     var isCompleted: Bool = false
     var completedAt: Date? = nil
     var createdAt: Date = Date()
+    /// Si la tarea con fecha avisa con una notificación (fase 3).
+    var reminderEnabled: Bool = true
+    /// Minutos de anticipación del aviso (0 = a la hora límite).
+    var reminderOffsetMinutes: Int = 0
     var list: TaskList?
 
     @Relationship(deleteRule: .cascade, inverse: \Subtask.task)
@@ -95,6 +99,40 @@ final class TaskItem {
     var recurrence: TaskRecurrence {
         get { TaskRecurrence(rawValue: recurrenceRaw) ?? .none }
         set { recurrenceRaw = newValue.rawValue }
+    }
+
+    var sortedSubtasks: [Subtask] {
+        (subtasks ?? []).sorted { ($0.order, $0.title) < ($1.order, $1.title) }
+    }
+
+    /// "2/5" si tiene subtareas.
+    var subtaskProgress: String? {
+        let all = subtasks ?? []
+        guard !all.isEmpty else { return nil }
+        return "\(all.filter(\.isDone).count)/\(all.count)"
+    }
+}
+
+/// Anticipación del aviso de una tarea.
+enum ReminderOffset: Int, CaseIterable, Identifiable {
+    case atTime = 0
+    case fiveMinutes = 5
+    case fifteenMinutes = 15
+    case thirtyMinutes = 30
+    case oneHour = 60
+    case oneDay = 1440
+
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .atTime: return "A la hora"
+        case .fiveMinutes: return "5 min antes"
+        case .fifteenMinutes: return "15 min antes"
+        case .thirtyMinutes: return "30 min antes"
+        case .oneHour: return "1 hora antes"
+        case .oneDay: return "1 día antes"
+        }
     }
 }
 

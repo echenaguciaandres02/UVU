@@ -129,6 +129,8 @@ enum BackupService {
                 task.isCompleted = taskItem.isCompleted
                 task.completedAt = taskItem.completedAt
                 task.createdAt = taskItem.createdAt
+                task.reminderEnabled = taskItem.reminderEnabled ?? true
+                task.reminderOffsetMinutes = taskItem.reminderOffsetMinutes ?? 0
                 context.insert(task)
                 task.list = list
                 for subItem in taskItem.subtasks {
@@ -266,6 +268,7 @@ enum BackupService {
             id: task.id, title: task.title, notes: task.notes, dueDate: task.dueDate, hasTime: task.hasTime,
             priority: task.priorityRaw, recurrence: task.recurrenceRaw, isCompleted: task.isCompleted,
             completedAt: task.completedAt, createdAt: task.createdAt,
+            reminderEnabled: task.reminderEnabled, reminderOffsetMinutes: task.reminderOffsetMinutes,
             subtasks: (task.subtasks ?? [])
                 .sorted { ($0.order, $0.title) < ($1.order, $1.title) }
                 .map { SubtaskDTO(title: $0.title, isDone: $0.isDone, order: $0.order) }

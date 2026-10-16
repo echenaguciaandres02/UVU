@@ -4,27 +4,10 @@ import SwiftData
 @main
 struct UVUApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    let container: ModelContainer
 
     init() {
         Appearance.configure()
-
-        #if DEBUG
-        // Capturas automáticas: datos de ejemplo en memoria, sin tocar la base real.
-        if LaunchOptions.demoData {
-            container = DataStore.makeContainer(inMemory: true)
-            SeedData.seed(context: container.mainContext)
-            DemoData.populate(context: container.mainContext)
-            return
-        }
-        #endif
-
-        container = DataStore.makeContainer()
-        SeedData.seedIfNeeded(context: container.mainContext)
-        if DataUpgrades.run(context: container.mainContext) {
-            let context = container.mainContext
-            Task { await NotificationService.rescheduleAll(context: context) }
-        }
+        _ = AppContainer.shared
     }
 
     var body: some Scene {
@@ -35,7 +18,7 @@ struct UVUApp: App {
                 .tint(.bone)
                 .background(Color.ink.ignoresSafeArea())
         }
-        .modelContainer(container)
+        .modelContainer(AppContainer.shared)
     }
 
     @ViewBuilder
@@ -50,6 +33,31 @@ struct UVUApp: App {
         RootTabView()
         #endif
     }
+}
+
+/// La base de datos única de la app. La usan las pantallas y también las acciones de las
+/// notificaciones ("Completar" funciona aunque la app esté cerrada).
+@MainActor
+enum AppContainer {
+    static let shared: ModelContainer = {
+        #if DEBUG
+        // Capturas automáticas: datos de ejemplo en memoria, sin tocar la base real.
+        if LaunchOptions.demoData {
+            let container = DataStore.makeContainer(inMemory: true)
+            SeedData.seed(context: container.mainContext)
+            DemoData.populate(context: container.mainContext)
+            return container
+        }
+        #endif
+
+        let container = DataStore.makeContainer()
+        SeedData.seedIfNeeded(context: container.mainContext)
+        if DataUpgrades.run(context: container.mainContext) {
+            let context = container.mainContext
+            Task { await NotificationService.rescheduleAll(context: context) }
+        }
+        return container
+    }()
 }
 
 #if DEBUG

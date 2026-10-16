@@ -77,6 +77,9 @@ struct TaskItemDTO: Codable, Equatable {
     var isCompleted: Bool
     var completedAt: Date?
     var createdAt: Date
+    /// Desde la fase 3. Opcionales para poder leer respaldos anteriores.
+    var reminderEnabled: Bool?
+    var reminderOffsetMinutes: Int?
     var subtasks: [SubtaskDTO]
 }
 

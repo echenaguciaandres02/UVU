@@ -51,15 +51,37 @@ final class ScreenshotTests: XCTestCase {
         snap(app, "\(prefix)06-calendario-dia")
         app.navigationBars.buttons.firstMatch.tap()
 
+        // Tareas
+        app.tabBars.buttons["Tareas"].tap()
+        _ = app.navigationBars["TAREAS"].waitForExistence(timeout: 10)
+        snap(app, "\(prefix)12-tareas-hoy")
+        tapLabel(app, "Próximos")
+        snap(app, "\(prefix)13-tareas-proximos")
+
         guard prefix.isEmpty else { return }
 
+        tapLabel(app, "Todas")
+        snap(app, "14-tareas-todas")
+        tapLabel(app, "Hechas")
+        snap(app, "15-tareas-hechas")
+        tapLabel(app, "Todas")
+        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Entregar capítulo")).firstMatch.tap()
+        sleep(1)
+        snap(app, "16-tarea-detalle")
+        app.swipeUp(velocity: .slow)
+        snap(app, "17-tarea-detalle-2")
+        app.buttons["Cancelar"].firstMatch.tap()
+        app.buttons["Mis listas"].firstMatch.tap()
+        _ = app.navigationBars["LISTAS"].waitForExistence(timeout: 10)
+        snap(app, "18-listas")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        app.tabBars.buttons["Hábitos"].tap()
         app.buttons["Nuevo hábito"].firstMatch.tap()
         sleep(1)
         snap(app, "07-nuevo-habito")
         app.buttons["Cancelar"].firstMatch.tap()
 
-        app.tabBars.buttons["Tareas"].tap()
-        snap(app, "08-tareas")
         app.tabBars.buttons["Journal"].tap()
         snap(app, "09-journal")
         app.tabBars.buttons["Gym"].tap()
@@ -72,6 +94,11 @@ final class ScreenshotTests: XCTestCase {
     }
 
     // MARK: - Utilidades
+
+    private func tapLabel(_ app: XCUIApplication, _ label: String) {
+        app.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch.tap()
+        sleep(1)
+    }
 
     private func launch(_ arguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
