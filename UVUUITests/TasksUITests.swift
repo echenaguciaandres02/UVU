@@ -28,8 +28,12 @@ final class TasksUITests: XCTestCase {
         let row = app.staticTexts[title].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10), "La tarea nueva no aparece en Hoy")
 
-        // Deslizar a la derecha la completa.
+        // Deslizar a la derecha muestra "Completar" (o la completa si el deslizamiento es largo).
         row.swipeRight()
+        let completeButton = app.buttons.matching(NSPredicate(format: "label == %@", "Completar")).firstMatch
+        if completeButton.waitForExistence(timeout: 3) {
+            completeButton.tap()
+        }
         let gone = NSPredicate(format: "exists == false")
         expectation(for: gone, evaluatedWith: row)
         waitForExpectations(timeout: 10)

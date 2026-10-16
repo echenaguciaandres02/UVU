@@ -64,8 +64,9 @@ final class ScreenshotTests: XCTestCase {
         snap(app, "14-tareas-todas")
         tapLabel(app, "Hechas")
         snap(app, "15-tareas-hechas")
-        tapLabel(app, "Todas")
-        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Entregar capítulo")).firstMatch.tap()
+        tapLabel(app, "Hoy")
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "Entregar capítulo")).firstMatch.tap()
         sleep(1)
         snap(app, "16-tarea-detalle")
         app.swipeUp(velocity: .slow)
@@ -95,8 +96,9 @@ final class ScreenshotTests: XCTestCase {
 
     // MARK: - Utilidades
 
+    /// Toca un botón del contenido (no de la barra de pestañas, que también tiene "Hoy").
     private func tapLabel(_ app: XCUIApplication, _ label: String) {
-        app.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch.tap()
+        app.collectionViews.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch.tap()
         sleep(1)
     }
 
