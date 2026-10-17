@@ -202,10 +202,25 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
   - 50 tests en verde (36 unitarios y 14 de interfaz), incluido un entreno completo de principio a fin.
   - Lógica en `Services/Gym/` (`GymStats`, `WorkoutActions`, `RestTimer`). Pantallas en
     `Features/Gym/`.
-- El último `UVU.ipa` (fase 5) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
+- **Ajustes tras probar la fase 5 (mis pedidos):**
+  1. Editor de rutina: contadores compactos propios (`CompactStepper`). Los `Stepper` del sistema
+     se dibujaban encimados.
+  2. Tareas: en **Hoy**, una sección por lista con su ícono (`TaskGrouping.byList`). En todas las
+     vistas, una franja del color de la lista en cada fila (`taskRowSurface`).
+  3. **Live Activity del descanso** en la pantalla de bloqueo y la Dynamic Island:
+     - Nueva extensión **`UVUWidgets`** (WidgetKit), que también servirá para la fase 7.
+     - `RestActivityAttributes` está en `UVU/Shared/LiveActivity/`, compartido por la app y la
+       extensión.
+     - La cuenta atrás usa `Text(timerInterval:)`, que el sistema anima solo con el teléfono
+       bloqueado. La extensión dibuja con colores en código porque no comparte el Asset Catalog.
+     - Al volver a la app se cierra si ya terminó (`RestTimer.refresh`).
+     - Con Apple ID gratuito, Sideloadly usa un App ID más por la extensión.
+  4. Frases del día **en inglés** (`Quotes.all`, unas 60); los mensajes de estado siguen en español.
+- El último `UVU.ipa` (fase 5 + ajustes) está en `Descargas\CLAUDE`. **Todavía no probé la Live
+  Activity en mi iPhone** (el simulador no muestra la pantalla de bloqueo).
 
-**Siguiente:** probar la fase 5 en el iPhone (sesión, descanso con el teléfono bloqueado,
-gráficas) y luego **fase 6: pantalla Hoy, calendario unificado y pulido visual**.
+**Siguiente:** probar los ajustes en el iPhone y luego **fase 6: pantalla Hoy, calendario
+unificado y pulido visual**.
 
 **Pendiente o limitaciones conocidas:**
 - La pantalla Hoy y el calendario unificado son marcadores de posición hasta la fase 6.
