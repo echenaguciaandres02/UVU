@@ -1,6 +1,6 @@
 # Contexto del proyecto UVU (para continuar en otro chat)
 
-Resumen de todo lo hablado y hecho hasta el 17 de octubre de 2026 (incluye la fase 3 y el sistema visual
+Resumen de todo lo hablado y hecho hasta el 17 de octubre de 2026 (incluye las fases 3 y 4 y el sistema visual
 DISCIPLINE, sección 7). Pégalo al inicio de un chat nuevo con Claude (o pídele que lea este archivo)
 para continuar sin perder contexto.
 
@@ -109,6 +109,12 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
   - Las tareas con fecha pero sin hora avisan a las **9:00** de ese día (cambiable en Ajustes).
   - La anticipación se **elige por tarea**: a la hora, 5, 15 o 30 min, 1 hora o 1 día antes.
   - **"Posponer 1 hora" solo mueve el aviso**; la fecha límite no cambia.
+- **Journal (mis respuestas en la fase 4):**
+  - Con Face ID activado, el journal **se bloquea al salir de la app**. Se pide la primera vez que
+    entras al Journal tras abrir UVU o volver a ella; cambiar de pestaña no lo pide otra vez.
+  - El ánimo se muestra con **5 barras tipo nivel** (sin emojis). En el calendario del journal, cada
+    día con entrada es un gris que se aclara del 1 (oscuro) al 5 (hueso); el rojo sigue reservado
+    para lo completado.
 - **Importar JSON:** reemplaza **todos** los datos, con confirmación. El respaldo tiene `version`
   (actualmente 1).
 - **Hábitos precargados (8):** Ejercicio (sí/no, `systemRole = "exercise"`), Tomar agua (8 vasos),
@@ -120,7 +126,7 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
 
 ## 5. Estado actual
 
-**Hecho y probado en la nube (17 tests en verde):**
+**Hecho y probado en la nube:**
 - **Fase 1:** proyecto, pestañas, modelos de todo el app, datos iniciales, exportar/importar JSON y
   Ajustes (unidad de peso, respaldo, iCloud "desactivado", versión).
 - **Fase 2:** pestaña Hábitos completa:
@@ -150,11 +156,26 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
     un contenedor compartido `AppContainer.shared` y la categoría se registra en `AppDelegate`.
   - Lógica en `Services/Tasks/` (`TaskSchedule`, `TaskActions`, `TaskGrouping`). Pantallas en
     `Features/Tasks/`.
-  - 34 tests en verde, incluido un flujo de interfaz: crear, completar deslizando y verla en Hechas.
-- El último `UVU.ipa` (fase 3) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
+  - Incluye un flujo de interfaz: crear, completar deslizando y verla en Hechas. La probé en mi
+    iPhone.
+- **Fase 4: journal.**
+  - Una entrada por día (`JournalStore.entryOrNew`), editable, con ánimo, texto libre (Cormorant),
+    preguntas guía opcionales y etiquetas. Las etiquetas no se duplican aunque cambien mayúsculas,
+    tildes o "#"; las que quedan sin uso se borran.
+  - Tarjeta "Hoy" que invita a escribir o resume lo escrito.
+  - Lista por mes con búsqueda (texto, respuestas y etiquetas; ignora tildes) y filtro por etiqueta.
+  - Calendario del journal con grises según el ánimo; tocar un día abre su entrada, también los
+    pasados.
+  - Face ID opcional (`JournalLock`; usa `.deviceOwnerAuthentication`, así que acepta el código
+    si Face ID falla). Se confirma al activarlo en Ajustes y se bloquea en `scenePhase == .background`.
+  - Ajustes → Journal: Face ID y editor de preguntas guía (`JournalPrompts`, guardadas como JSON en
+    `@AppStorage`).
+  - Lógica en `Services/Journal/`. Pantallas en `Features/Journal/`.
+  - 39 tests en verde (30 unitarios y 9 de interfaz), incluido un flujo: escribir hoy y encontrarlo con la búsqueda.
+- El último `UVU.ipa` (fase 4) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
+  Face ID no se puede probar en el simulador.
 
-**Siguiente:** probar la fase 3 en el iPhone (avisos, botones de la notificación, deslizar) y luego
-**fase 4: journal**.
+**Siguiente:** probar la fase 4 en el iPhone (sobre todo Face ID) y luego **fase 5: gym**.
 
 **Pendiente o limitaciones conocidas:**
 - La pantalla Hoy y el calendario unificado son marcadores de posición hasta la fase 6.

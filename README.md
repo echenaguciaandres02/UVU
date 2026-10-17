@@ -151,7 +151,7 @@ interfaz, para poder probarla con tests.
 - [x] Fase 2: hábitos + calendario
 - [x] Sistema visual "DISCIPLINE" (solo modo oscuro; ver `CONTEXTO.md`, sección 7)
 - [x] Fase 3: tareas y notificaciones
-- [ ] Fase 4: journal
+- [x] Fase 4: journal
 - [ ] Fase 5: gym
 - [ ] Fase 6: pantalla Hoy, calendario unificado y pulido visual
 - [ ] Fase 7: widgets
