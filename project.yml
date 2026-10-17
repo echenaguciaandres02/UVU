@@ -63,6 +63,9 @@ targets:
     sources:
       - path: UVUWidgets
       - path: UVU/Shared/LiveActivity
+      # Frase del día para el widget (solo Foundation).
+      - path: UVU/DesignSystem/Quotes.swift
+      - path: UVU/Shared/Extensions/AppCalendar.swift
     info:
       path: UVUWidgets/Info.plist
       properties:
