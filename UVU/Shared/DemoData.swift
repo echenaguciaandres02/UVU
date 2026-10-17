@@ -37,6 +37,61 @@ enum DemoData {
         try? context.save()
         populateTasks(context: context, today: today)
         populateJournal(context: context, today: today)
+        populateGym(context: context, today: today)
+    }
+
+    /// Push asignada a hoy y seis semanas de entrenos con progresión, para el historial y las gráficas.
+    private static func populateGym(context: ModelContext, today: Date) {
+        let calendar = AppCalendar.calendar
+        let routines = ((try? context.fetch(FetchDescriptor<Routine>())) ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        guard routines.count >= 3 else { return }
+        let weekday = AppCalendar.weekday(of: today)
+        routines[0].weekdays = [weekday]
+        routines[1].weekdays = [weekday % 7 + 1]
+        routines[2].weekdays = [(weekday + 1) % 7 + 1]
+
+        for week in (1...6).reversed() {
+            for (offset, routine) in routines.enumerated() {
+                guard let day = calendar.date(byAdding: .day, value: -(week * 7) + offset * 2, to: today),
+                      let start = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: day) else { continue }
+                let session = WorkoutSession(startedAt: start)
+                context.insert(session)
+                session.routine = routine
+                session.endedAt = start.addingTimeInterval(TimeInterval(55 * 60 + week * 60))
+                let progress = Double(6 - week)
+                for item in routine.sortedItems {
+                    guard let exercise = item.exercise else { continue }
+                    let sessionExercise = SessionExercise(order: item.order)
+                    context.insert(sessionExercise)
+                    sessionExercise.session = session
+                    sessionExercise.exercise = exercise
+                    let base = baseWeight(for: exercise.name)
+                    for index in 0..<item.targetSets {
+                        let weight = base + progress * 2.5 - (index == item.targetSets - 1 ? 2.5 : 0)
+                        let set = WorkoutSet(order: index, weight: max(weight, 0), unit: .kg, reps: item.targetReps)
+                        set.isCompleted = true
+                        set.completedAt = start
+                        set.rpe = index == item.targetSets - 1 ? 9 : nil
+                        context.insert(set)
+                        set.sessionExercise = sessionExercise
+                    }
+                }
+            }
+        }
+        try? context.save()
+    }
+
+    private static func baseWeight(for name: String) -> Double {
+        switch name {
+        case "Press de banca": return 70
+        case "Sentadilla": return 90
+        case "Peso muerto rumano": return 80
+        case "Remo con barra": return 60
+        case "Press militar": return 40
+        case "Prensa de piernas": return 140
+        case "Dominadas": return 0
+        default: return 20
+        }
     }
 
     /// Entradas de los últimos días (hoy queda sin escribir, para ver la invitación).

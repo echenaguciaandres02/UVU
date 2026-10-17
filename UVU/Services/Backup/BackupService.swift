@@ -179,6 +179,7 @@ enum BackupService {
             for routineItem in item.items {
                 let entry = RoutineExercise(order: routineItem.order, targetSets: routineItem.targetSets,
                                             targetReps: routineItem.targetReps)
+                entry.restSeconds = routineItem.restSeconds ?? 90
                 context.insert(entry)
                 entry.routine = routine
                 entry.exercise = routineItem.exerciseID.flatMap { exercisesByID[$0] }
@@ -194,6 +195,7 @@ enum BackupService {
             session.routine = item.routineID.flatMap { routinesByID[$0] }
             for exerciseItem in item.exercises {
                 let sessionExercise = SessionExercise(order: exerciseItem.order)
+                sessionExercise.restSeconds = exerciseItem.restSeconds ?? 90
                 context.insert(sessionExercise)
                 sessionExercise.session = session
                 sessionExercise.exercise = exerciseItem.exerciseID.flatMap { exercisesByID[$0] }
@@ -301,7 +303,8 @@ enum BackupService {
                 .sorted { $0.order < $1.order }
                 .map {
                     RoutineExerciseDTO(order: $0.order, targetSets: $0.targetSets,
-                                       targetReps: $0.targetReps, exerciseID: $0.exercise?.id)
+                                       targetReps: $0.targetReps, restSeconds: $0.restSeconds,
+                                       exerciseID: $0.exercise?.id)
                 }
         )
     }
@@ -315,6 +318,7 @@ enum BackupService {
                 .map { item in
                     SessionExerciseDTO(
                         order: item.order,
+                        restSeconds: item.restSeconds,
                         exerciseID: item.exercise?.id,
                         sets: (item.sets ?? [])
                             .sorted { $0.order < $1.order }

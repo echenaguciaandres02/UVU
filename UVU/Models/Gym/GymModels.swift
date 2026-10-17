@@ -111,6 +111,8 @@ final class RoutineExercise {
     var order: Int = 0
     var targetSets: Int = 3
     var targetReps: Int = 10
+    /// Descanso entre series en segundos (fase 5).
+    var restSeconds: Int = 90
     var routine: Routine?
     var exercise: Exercise?
 
@@ -142,6 +144,8 @@ final class WorkoutSession {
 final class SessionExercise {
     var id: UUID = UUID()
     var order: Int = 0
+    /// Descanso entre series en segundos, copiado de la rutina al empezar (fase 5).
+    var restSeconds: Int = 90
     var session: WorkoutSession?
     var exercise: Exercise?
 
@@ -180,5 +184,36 @@ final class WorkoutSet {
 
     func weight(in target: WeightUnit) -> Double {
         unit.convert(weight, to: target)
+    }
+}
+
+extension Routine {
+    var sortedItems: [RoutineExercise] {
+        (items ?? []).sorted { $0.order < $1.order }
+    }
+
+    /// "L · X · V"
+    var weekdaysDescription: String {
+        let names = AppCalendar.orderedWeekdays.filter { weekdays.contains($0) }
+            .map { AppCalendar.veryShortWeekdayName($0) }
+        return names.isEmpty ? "Sin días" : names.joined(separator: " · ")
+    }
+}
+
+extension WorkoutSession {
+    var sortedExercises: [SessionExercise] {
+        (exercises ?? []).sorted { $0.order < $1.order }
+    }
+
+    var isActive: Bool { endedAt == nil }
+}
+
+extension SessionExercise {
+    var sortedSets: [WorkoutSet] {
+        (sets ?? []).sorted { $0.order < $1.order }
+    }
+
+    var completedSets: [WorkoutSet] {
+        sortedSets.filter(\.isCompleted)
     }
 }

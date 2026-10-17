@@ -130,6 +130,8 @@ struct RoutineExerciseDTO: Codable, Equatable {
     var order: Int
     var targetSets: Int
     var targetReps: Int
+    /// Desde la fase 5. Opcional para leer respaldos anteriores.
+    var restSeconds: Int?
     var exerciseID: UUID?
 }
 
@@ -144,6 +146,8 @@ struct WorkoutSessionDTO: Codable, Equatable {
 
 struct SessionExerciseDTO: Codable, Equatable {
     var order: Int
+    /// Desde la fase 5. Opcional para leer respaldos anteriores.
+    var restSeconds: Int?
     var exerciseID: UUID?
     var sets: [WorkoutSetDTO]
 }
