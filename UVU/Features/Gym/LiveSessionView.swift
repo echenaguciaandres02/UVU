@@ -319,6 +319,7 @@ struct WorkoutSummary {
     let unit: WeightUnit
     let records: [String]
 
+    @MainActor
     init(session: WorkoutSession, unit: WeightUnit, fallback: WorkoutSummary? = nil) {
         title = session.routine?.name ?? "Entreno libre"
         duration = (session.endedAt ?? .now).timeIntervalSince(session.startedAt)
