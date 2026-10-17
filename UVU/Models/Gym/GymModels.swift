@@ -192,10 +192,10 @@ extension Routine {
         (items ?? []).sorted { $0.order < $1.order }
     }
 
-    /// "L · X · V"
+    /// "lun · mié · vie"
     var weekdaysDescription: String {
         let names = AppCalendar.orderedWeekdays.filter { weekdays.contains($0) }
-            .map { AppCalendar.veryShortWeekdayName($0) }
+            .map { AppCalendar.shortWeekdayName($0).replacingOccurrences(of: ".", with: "") }
         return names.isEmpty ? "Sin días" : names.joined(separator: " · ")
     }
 }

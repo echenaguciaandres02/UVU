@@ -162,11 +162,15 @@ struct GymHomeView: View {
                         Button {
                             start(routine)
                         } label: {
+                            // Contorno: el rojo con volumen queda para "Hoy toca".
                             Image(systemName: "play.fill")
                                 .font(.system(size: 14, weight: .black))
-                                .foregroundStyle(.ink)
+                                .foregroundStyle(.bone)
                                 .frame(width: 40, height: 40)
-                                .background(.signal, in: RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
+                                        .strokeBorder(.graphite, lineWidth: 1.5)
+                                }
                         }
                         .buttonStyle(.borderless)
                         .disabled(activeSession != nil)

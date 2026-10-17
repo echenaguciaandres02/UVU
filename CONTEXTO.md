@@ -1,6 +1,6 @@
 # Contexto del proyecto UVU (para continuar en otro chat)
 
-Resumen de todo lo hablado y hecho hasta el 17 de octubre de 2026 (incluye las fases 3 y 4 y el sistema visual
+Resumen de todo lo hablado y hecho hasta el 17 de octubre de 2026 (incluye las fases 3, 4 y 5 y el sistema visual
 DISCIPLINE, sección 7). Pégalo al inicio de un chat nuevo con Claude (o pídele que lea este archivo)
 para continuar sin perder contexto.
 
@@ -115,6 +115,14 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
   - El ánimo se muestra con **5 barras tipo nivel** (sin emojis). En el calendario del journal, cada
     día con entrada es un gris que se aclara del 1 (oscuro) al 5 (hueso); el rojo sigue reservado
     para lo completado.
+- **Gym (mis respuestas en la fase 5):**
+  - El **descanso arranca solo al marcar una serie** como hecha: 90 s por defecto, ajustable por
+    ejercicio en la rutina, con ±15 s y Saltar. Al terminar avisa con notificación aunque el
+    teléfono esté bloqueado.
+  - **Dos récords por ejercicio:** peso máximo y 1RM estimado (Epley: peso × (1 + reps/30)). La
+    primera sesión de un ejercicio no cuenta como récord.
+  - Rutinas **Push, Pull y Legs precargadas sin días** (también se agregan a instalaciones que no
+    tenían rutinas).
 - **Importar JSON:** reemplaza **todos** los datos, con confirmación. El respaldo tiene `version`
   (actualmente 1).
 - **Hábitos precargados (8):** Ejercicio (sí/no, `systemRole = "exercise"`), Tomar agua (8 vasos),
@@ -172,10 +180,31 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
     `@AppStorage`).
   - Lógica en `Services/Journal/`. Pantallas en `Features/Journal/`.
   - 39 tests en verde (30 unitarios y 9 de interfaz), incluido un flujo: escribir hoy y encontrarlo con la búsqueda.
-- El último `UVU.ipa` (fase 4) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
-  Face ID no se puede probar en el simulador.
+  - La probé en mi iPhone, incluido Face ID.
+- **Fase 5: gym.**
+  - Inicio con la sesión en curso o "Hoy toca" + Empezar (o entreno libre), y vistas Rutinas /
+    Historial / Ejercicios.
+  - Editor de rutina: nombre, días, ejercicios con series, repeticiones y descanso
+    (`RoutineExercise.restSeconds`, campo nuevo que se migra solo).
+  - Biblioteca con búsqueda y ejercicios propios.
+  - Sesión en vivo a pantalla completa (`LiveSessionView`):
+    - Series con peso (kg o lb por serie), repeticiones y RPE, precargadas con lo de la última vez.
+    - "Última vez: …" por ejercicio.
+    - Barra roja de descanso (`RestTimer`, notificación "rest-timer").
+  - Terminar (`WorkoutActions.finish`):
+    - Descarta las series no marcadas y los ejercicios vacíos.
+    - Muestra un resumen (duración, series, volumen, récords).
+    - **Marca el hábito Ejercicio** del día.
+    - Si no hiciste nada, borra la sesión.
+  - Historial con detalle por entreno y "PR" en `brass`.
+  - Progreso por ejercicio con **Swift Charts**: peso máximo, 1RM y volumen; el punto rojo es el
+    récord.
+  - Lógica en `Services/Gym/` (`GymStats`, `WorkoutActions`, `RestTimer`). Pantallas en
+    `Features/Gym/`.
+- El último `UVU.ipa` (fase 5) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
 
-**Siguiente:** probar la fase 4 en el iPhone (sobre todo Face ID) y luego **fase 5: gym**.
+**Siguiente:** probar la fase 5 en el iPhone (sesión, descanso con el teléfono bloqueado,
+gráficas) y luego **fase 6: pantalla Hoy, calendario unificado y pulido visual**.
 
 **Pendiente o limitaciones conocidas:**
 - La pantalla Hoy y el calendario unificado son marcadores de posición hasta la fase 6.
@@ -288,3 +317,7 @@ Todas las fuentes respetan el tamaño de texto del sistema (Dynamic Type).
   app se cerraba. El calendario y la paleta usan filas fijas (`HStack`/`VStack`/`Grid`).
 - Para cualquier pantalla nueva: fondo con `.screenBackground()` y filas con `.rowSurface()`.
   Formularios con `List` + `.uvuForm()`. Encabezados con `Text(...).labelCaps()`.
+- **Capturas automáticas:** una prueba por sección en `ScreenshotTests`; cada prueba de interfaz tiene
+  un límite de 2 minutos y el recorrido completo lo superaba.
+- **Concurrencia:** si un método `@MainActor` se llama desde un inicializador de un `struct`, ese
+  inicializador también debe ser `@MainActor`.
