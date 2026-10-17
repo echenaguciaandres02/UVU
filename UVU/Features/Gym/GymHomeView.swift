@@ -3,6 +3,7 @@ import SwiftData
 
 enum GymScope: String, CaseIterable, Identifiable {
     case routines
+    case summary
     case history
     case exercises
 
@@ -11,6 +12,7 @@ enum GymScope: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .routines: return "Rutinas"
+        case .summary: return "Resumen"
         case .history: return "Historial"
         case .exercises: return "Ejercicios"
         }
@@ -51,6 +53,7 @@ struct GymHomeView: View {
 
                 switch scope {
                 case .routines: routinesSection
+                case .summary: GymSummarySections(sessions: sessions, unit: weightUnit)
                 case .history: historySections
                 case .exercises: exercisesSections
                 }
@@ -68,7 +71,7 @@ struct GymHomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         switch scope {
-                        case .routines, .history: newRoutine()
+                        case .routines, .summary, .history: newRoutine()
                         case .exercises: showNewExercise = true
                         }
                     } label: {

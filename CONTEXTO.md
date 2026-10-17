@@ -242,6 +242,22 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
     `TodayAgendaTests`. Prueba de interfaz `TodayUITests` y capturas `01-hoy-*` y `30-32`.
   - Se quitó el diagnóstico del contador de Ajustes.
 
+- **Presentación al abrir** (`App/SplashView.swift`): el video del toro
+  (`Resources/Splash/splash_toro.mp4`, versión liviana de 13,5 MB, 7 s, sin sonido) a pantalla
+  completa al abrir la app desde cero; un toque lo salta y se desvanece hacia Hoy. La pantalla de
+  arranque de iOS es roja (`UILaunchScreen` → `signal`). No sale en las pruebas (argumentos `-uvu-*`;
+  `-uvu-splash` lo fuerza en `SplashUITests`).
+- **Gym → Resumen** (mis respuestas: se mide en **series hechas**, solo el **músculo principal**; quiero
+  torta, mes vs mes anterior, récords y gráfica del año; va como vista nueva del Gym):
+  - Mes (empieza de cero cada día 1) o Año (suma todos sus meses), con flechas para ver periodos
+    anteriores.
+  - Gráfico de torta (anillo) con el total de series, y por grupo: %, series y ▲/▼ frente al periodo
+    anterior. Cada grupo tiene un color fijo (`MuscleGroup.chartColor`).
+  - Récords del periodo: ejercicios que superaron su mejor peso o 1RM de antes (la primera vez no cuenta).
+  - Barras de series por mes del año; el mes elegido en rojo.
+  - Lógica en `Services/Gym/TrainingSummary.swift` con `TrainingSummaryTests`; pantalla en
+    `Features/Gym/GymSummaryView.swift`; capturas `33`–`36`.
+
 **Siguiente:** probar la fase 6 en el iPhone. La fase 7 (widgets) no funcionaría con Sideloadly:
 hay que decidir si se salta o se cambia a AltStore.
 

@@ -106,6 +106,24 @@ final class ScreenshotTests: XCTestCase {
         snap(app, "29-gym-rutina")
     }
 
+    func testGymSummaryScreens() {
+        let app = launch(demo)
+        app.tabBars.buttons["Gym"].tap()
+        _ = app.navigationBars["GYM"].waitForExistence(timeout: 10)
+        tapLabel(app, "Resumen")
+        app.swipeUp(velocity: .slow)
+        snap(app, "33-gym-resumen")
+        app.swipeUp(velocity: .slow)
+        snap(app, "34-gym-resumen-2")
+        app.swipeUp(velocity: .slow)
+        snap(app, "35-gym-resumen-3")
+        app.swipeDown(velocity: .fast)
+        app.swipeDown(velocity: .fast)
+        tapLabel(app, "Año")
+        app.swipeUp(velocity: .slow)
+        snap(app, "36-gym-resumen-ano")
+    }
+
     /// Separada de `testGymScreens` para no pasar el límite de 2 minutos por prueba.
     func testGymSessionScreens() {
         let app = launch(demo)
