@@ -5,6 +5,8 @@ import SwiftData
 struct UVUApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
+    /// Video de presentación al abrir la app (ver `SplashView`).
+    @State private var showSplash = SplashView.isEnabled
 
     init() {
         Appearance.configure()
@@ -13,7 +15,16 @@ struct UVUApp: App {
 
     var body: some Scene {
         WindowGroup {
-            rootView
+            ZStack {
+                rootView
+                if showSplash {
+                    SplashView {
+                        withAnimation(.easeOut(duration: 0.45)) { showSplash = false }
+                    }
+                    .transition(.opacity)
+                    .zIndex(1)
+                }
+            }
                 .environment(\.locale, AppLocale.spanish)
                 .preferredColorScheme(.dark)
                 .tint(.bone)

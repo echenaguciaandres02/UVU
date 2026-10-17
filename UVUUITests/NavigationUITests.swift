@@ -8,6 +8,7 @@ final class NavigationUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
+        app.launchArguments = ["-uvu-no-splash"]
         app.launch()
         app.tabBars.buttons["Hábitos"].tap()
         XCTAssertTrue(app.navigationBars["HÁBITOS"].waitForExistence(timeout: 10))

@@ -7,6 +7,7 @@ final class TodayUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
+        app.launchArguments = ["-uvu-no-splash"]
         app.launch()
     }
 
