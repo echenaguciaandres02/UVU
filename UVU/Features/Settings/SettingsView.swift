@@ -58,22 +58,6 @@ struct SettingsView: View {
                 .rowSurface()
 
                 Section {
-                    LabeledContent("Actividades en vivo",
-                                   value: RestTimer.liveActivitiesAllowed ? "Permitidas" : "Desactivadas")
-                    Button("Probar contador (20 s)") {
-                        RestTimer.shared.start(seconds: 20, exerciseName: "Prueba", nextSet: "Serie 1 de 1",
-                                               workoutName: "Prueba")
-                    }
-                } header: {
-                    Text("Contador en pantalla bloqueada").labelCaps()
-                } footer: {
-                    Text("Toca Probar y bloquea el iPhone. Último intento: \(RestTimer.shared.activityStatus)")
-                        .formFooter()
-                        .textSelection(.enabled)
-                }
-                .rowSurface()
-
-                Section {
                     Button {
                         export()
                     } label: {

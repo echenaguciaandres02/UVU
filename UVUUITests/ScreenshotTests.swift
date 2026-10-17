@@ -21,9 +21,26 @@ final class ScreenshotTests: XCTestCase {
         }
     }
 
-    func testHabitsScreens() {
+    func testTodayScreens() {
         let app = launch(demo)
         snap(app, "01-hoy")
+        for page in 2...4 {
+            app.swipeUp(velocity: .slow)
+            snap(app, "01-hoy-\(page)")
+        }
+        app.swipeDown(velocity: .fast)
+        app.swipeDown(velocity: .fast)
+        app.buttons["Calendario"].firstMatch.tap()
+        _ = app.navigationBars["CALENDARIO"].waitForExistence(timeout: 10)
+        snap(app, "30-calendario")
+        app.swipeUp(velocity: .slow)
+        snap(app, "31-calendario-dia")
+        app.swipeUp(velocity: .slow)
+        snap(app, "32-calendario-dia-2")
+    }
+
+    func testHabitsScreens() {
+        let app = launch(demo)
         habits(app, prefix: "")
         app.buttons["Nuevo hábito"].firstMatch.tap()
         sleep(1)

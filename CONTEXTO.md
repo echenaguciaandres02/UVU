@@ -11,7 +11,7 @@ para continuar sin perder contexto.
 - Soy el **único usuario** de la app. Soy **principiante en Xcode**: necesito pasos exactos.
 - Uso **Windows 11, sin Mac** y **sin cuenta de Apple Developer de pago** (Apple ID gratuito).
 - Mi iPhone tiene **iOS 26.6.2 en inglés**, pero la app debe estar **en español**.
-- GitHub: usuario **`echenaguciaandres02`**, repo privado **https://github.com/echenaguciaandres02/UVU**.
+- GitHub: usuario **`echenaguciaandres02`**, repo público **https://github.com/echenaguciaandres02/UVU**.
 - Tengo instalados Git, GitHub CLI (`gh`, con sesión iniciada), iTunes e iCloud (versiones web de
   Apple, no las de Microsoft Store) y Sideloadly. Los instaladores están en `Descargas\CLAUDE`.
 - **Problema de red:** mi conexión sale por un servidor en EE. UU. (Latitude.sh, parece VPN o proxy) y
@@ -215,15 +215,37 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
        bloqueado. La extensión dibuja con colores en código porque no comparte el Asset Catalog.
      - Al volver a la app se cierra si ya terminó (`RestTimer.refresh`).
      - Con Apple ID gratuito, Sideloadly usa un App ID más por la extensión.
-  4. Frases del día **en inglés** (`Quotes.all`, unas 60); los mensajes de estado siguen en español.
-- El último `UVU.ipa` (fase 5 + ajustes) está en `Descargas\CLAUDE`. **Todavía no probé la Live
-  Activity en mi iPhone** (el simulador no muestra la pantalla de bloqueo).
+  4. Frases del día **en inglés** (`Quotes.all`, unas 60), entre comillas tipográficas
+     (`Quotes.quotedOfTheDay`); los mensajes de estado siguen en español.
+- **Live Activity y widgets con Sideloadly: no funcionan.** Lo comprobé en el iPhone: iOS acepta la
+  actividad ("Iniciado correctamente") pero no la dibuja, y el widget de prueba "Frase del día" no
+  aparece en la galería. El registro de Sideloadly dice `Using app ID "UVU"`: con Apple ID gratuito
+  registra un solo App ID y firma la extensión con el de la app, así que iOS la ignora. Con
+  **AltStore** (registra un App ID por extensión) sí debería funcionar; decidí **no cambiar** y
+  quedarme sin contador en la pantalla bloqueada ni widgets. El aviso "Descanso terminado" sí llega.
+  La extensión `UVUWidgets` (Live Activity + widget "Frase del día") sigue en el proyecto.
+- **El repositorio ahora es público** (17 oct 2026): en privado se acabaron los minutos gratis de
+  macOS de GitHub Actions. En repos públicos las compilaciones no gastan minutos.
+- **Fase 6: pantalla Hoy, calendario unificado y pulido** (mis respuestas: póster de la frase más
+  bajo arriba; todos los hábitos de hoy, pendientes primero; "Próximos avisos" con hábitos y
+  tareas de hoy; calendario con el cuadro de hábitos más marcas):
+  - **Hoy** (`Features/Today/TodayView.swift`, una `List`): saludo y fecha, póster de la frase,
+    hábitos de hoy con `DayProgressHeader` y `HabitRowView` (un toque marca, con vibración),
+    tareas de hoy o atrasadas (`TaskRowView`, + para crear una para hoy), próximos avisos (se
+    recalculan cada minuto, máximo 6), entreno (en curso / hecho / "Hoy toca" + Empezar entreno /
+    entreno libre) y journal del día (respeta Face ID: no enseña nada si está bloqueado).
+  - **Calendario unificado** (`Features/Calendar/UnifiedCalendarView.swift`): cada día es el
+    cuadro de hábitos (rojo, rojo oscuro, tachado) con marcas debajo (entreno, journal, tareas
+    hechas). Al tocar un día: resumen de hábitos (con "Marcar o corregir"), entrenos (abren el
+    detalle), tareas completadas y el journal (abre la entrada; pide Face ID si hace falta).
+  - Lógica en `Services/Today/TodayAgenda.swift` (`TodayAgenda`, `DayActivityIndex`) con
+    `TodayAgendaTests`. Prueba de interfaz `TodayUITests` y capturas `01-hoy-*` y `30-32`.
+  - Se quitó el diagnóstico del contador de Ajustes.
 
-**Siguiente:** probar los ajustes en el iPhone y luego **fase 6: pantalla Hoy, calendario
-unificado y pulido visual**.
+**Siguiente:** probar la fase 6 en el iPhone. La fase 7 (widgets) no funcionaría con Sideloadly:
+hay que decidir si se salta o se cambia a AltStore.
 
 **Pendiente o limitaciones conocidas:**
-- La pantalla Hoy y el calendario unificado son marcadores de posición hasta la fase 6.
 - Los recordatorios de hábitos repiten cada día aunque el hábito ya esté cumplido.
 - iOS permite unas **64 notificaciones pendientes** por app (hábitos + tareas). El formulario de
   hábitos avisa si uno usa muchas. Cada tarea con aviso usa una.
@@ -232,7 +254,7 @@ unificado y pulido visual**.
   argumento `-uvu-no-notifications`). Así el cuadro de permiso no bloquea las pruebas de interfaz.
 - En las pruebas de interfaz, el checkbox de una tarea se llama "Completar <título>": para abrir la
   tarea hay que excluirlo de la búsqueda.
-- Widgets (fase 7) necesitan App Group: con firma gratuita puede no funcionar; se verá en esa fase.
+- Widgets (fase 7) y Live Activity no funcionan instalando con Sideloadly (ver arriba).
 - Los números de los días completados (texto negro sobre rojo) tienen contraste 3,9:1. Cumple AA
   solo para texto grande; VoiceOver lee la fecha y el estado completos.
 

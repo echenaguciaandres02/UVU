@@ -155,7 +155,7 @@ struct HabitsHomeView: View {
 }
 
 /// "4 / 8" en números finos y la barra del día.
-private struct DayProgressHeader: View {
+struct DayProgressHeader: View {
     let done: Int
     let total: Int
 
