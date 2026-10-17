@@ -36,6 +36,33 @@ enum DemoData {
         }
         try? context.save()
         populateTasks(context: context, today: today)
+        populateJournal(context: context, today: today)
+    }
+
+    /// Entradas de los últimos días (hoy queda sin escribir, para ver la invitación).
+    private static func populateJournal(context: ModelContext, today: Date) {
+        let calendar = AppCalendar.calendar
+        let samples: [(Int, Int, String, [String], String?)] = [
+            (1, 4, "Entrené a las 5. Avancé dos páginas de la tesis y me sentí enfocado todo el día.", ["gym", "tesis"],
+             "Levantarme sin posponer la alarma"),
+            (2, 3, "Día normal. Mucho trabajo, poca energía en la tarde.", ["trabajo"], nil),
+            (3, 5, "Domingo en la playa con la familia. Desconexión total.", ["familia", "descanso"],
+             "Pasar tiempo sin el teléfono"),
+            (5, 2, "Dormí mal y se notó. Mañana me acuesto antes de las 11.", ["sueño"], nil),
+            (6, 4, "Buena sesión de boxeo. La técnica va mejorando.", ["gym"], "Terminar el entreno completo"),
+            (8, 3, "Reunión larga. Aproveché la noche para leer.", ["trabajo", "lectura"], nil),
+            (9, 1, "Día pesado. Nada salió como esperaba.", ["trabajo"], nil),
+            (11, 4, "Capítulo 2 enviado a revisión.", ["tesis"], "Cumplir la fecha que me puse"),
+            (13, 5, "Récord en sentadilla. Disciplina > motivación.", ["gym"], "No negociar conmigo mismo"),
+        ]
+        let prompts = JournalPrompts.defaults
+        for (daysAgo, mood, text, tags, good) in samples {
+            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) else { continue }
+            let entry = JournalStore.entryOrNew(on: date, in: context)
+            var answers: [(question: String, answer: String)] = []
+            if let good { answers.append((prompts[0], good)) }
+            JournalStore.save(entry, text: text, mood: mood, answers: answers, tagNames: tags, in: context)
+        }
     }
 
     private static func populateTasks(context: ModelContext, today: Date) {

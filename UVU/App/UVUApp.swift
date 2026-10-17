@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct UVUApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         Appearance.configure()
@@ -19,6 +20,12 @@ struct UVUApp: App {
                 .background(Color.ink.ignoresSafeArea())
         }
         .modelContainer(AppContainer.shared)
+        .onChange(of: scenePhase) { _, phase in
+            // El journal protegido se vuelve a bloquear al salir de la app.
+            if phase == .background {
+                JournalLock.shared.lock()
+            }
+        }
     }
 
     @ViewBuilder

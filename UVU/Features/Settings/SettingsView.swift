@@ -8,6 +8,8 @@ struct SettingsView: View {
 
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @AppStorage(TaskSchedule.defaultReminderKey) private var taskReminderMinutes = 9 * 60
+    @AppStorage(JournalLock.enabledKey) private var journalLockEnabled = false
+    @State private var lockMessage: String?
 
     @State private var exportFile: ShareableFile?
     @State private var showImporter = false
@@ -17,6 +19,20 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Toggle("Proteger con Face ID", isOn: journalLockBinding)
+                        .tint(.signal)
+                    NavigationLink("Preguntas guía") {
+                        JournalPromptsEditor()
+                    }
+                } header: {
+                    Text("Journal").labelCaps()
+                } footer: {
+                    Text(lockMessage ?? "Con Face ID, el journal se bloquea cada vez que sales de la app.")
+                        .formFooter()
+                }
+                .rowSurface()
+
                 Section {
                     DatePicker("Aviso de tareas sin hora", selection: taskReminderTime, displayedComponents: .hourAndMinute)
                 } header: {
@@ -122,6 +138,28 @@ struct SettingsView: View {
             }
         }
         .presentationBackground(Color.ink)
+    }
+
+    /// Para activar la protección se confirma primero con Face ID; desactivarla no lo pide.
+    private var journalLockBinding: Binding<Bool> {
+        Binding(
+            get: { journalLockEnabled },
+            set: { newValue in
+                guard newValue else {
+                    journalLockEnabled = false
+                    lockMessage = nil
+                    return
+                }
+                Task {
+                    if await JournalLock.shared.confirmIdentity() {
+                        journalLockEnabled = true
+                        lockMessage = nil
+                    } else {
+                        lockMessage = "No se pudo activar: el iPhone necesita Face ID o un código configurado."
+                    }
+                }
+            }
+        )
     }
 
     private var taskReminderTime: Binding<Date> {
