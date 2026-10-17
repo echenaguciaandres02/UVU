@@ -112,11 +112,34 @@ final class RestTimer {
             Task { await activity.update(content) }
             return
         }
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        guard Self.liveActivitiesAllowed else {
+            activityStatus = "No se mostró: las Actividades en vivo están desactivadas para UVU en Ajustes del iPhone."
+            return
+        }
         endStaleActivities()
         let attributes = RestActivityAttributes(workoutName: workoutName.isEmpty ? "Entreno" : workoutName)
-        activity = try? Activity.request(attributes: attributes, content: content, pushType: nil)
+        do {
+            activity = try Activity.request(attributes: attributes, content: content, pushType: nil)
+            activityStatus = "Iniciado correctamente (\(Self.timeFormatter.string(from: .now)))."
+        } catch {
+            activity = nil
+            activityStatus = "iOS rechazó el contador: \(error.localizedDescription) [\(String(describing: error))]"
+        }
     }
+
+    // MARK: - Diagnóstico (Ajustes → Gym)
+
+    /// Resultado del último intento de mostrar el contador en la pantalla bloqueada.
+    private(set) var activityStatus = "Todavía no se ha intentado."
+
+    /// Si iOS permite a UVU mostrar Actividades en vivo (interruptor en Ajustes → UVU).
+    static var liveActivitiesAllowed: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
 
     private func endActivity() {
         guard let current = activity else {
