@@ -75,6 +75,11 @@ enum Quotes {
     /// Al completar todos los hábitos del día.
     static let dayComplete = "HECHO. MAÑANA OTRA VEZ."
 
+    /// La frase del día entre comillas tipográficas: “DO.”
+    static func quotedOfTheDay(_ date: Date = .now) -> String {
+        "“\(ofTheDay(date))”"
+    }
+
     /// La misma frase durante todo el día; cambia a medianoche.
     static func ofTheDay(_ date: Date = .now) -> String {
         guard !all.isEmpty else { return "DO." }

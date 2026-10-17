@@ -163,7 +163,7 @@ struct DayCompleteOverlay: View {
     ScrollView {
         VStack(spacing: Space.l) {
             PosterHeader(title: "Hoy.", subtitle: PosterHeader.dateLine())
-            RedPoster(text: Quotes.ofTheDay(), caption: "Frase del día")
+            RedPoster(text: Quotes.quotedOfTheDay(), caption: "Frase del día")
                 .overlay(alignment: .topTrailing) { TapeLabel(text: "DO.").padding(Space.m) }
             QuoteCard(text: "Empieza donde estás.")
         }
