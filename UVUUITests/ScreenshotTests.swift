@@ -104,7 +104,13 @@ final class ScreenshotTests: XCTestCase {
         sleep(1)
         app.swipeUp(velocity: .slow)
         snap(app, "29-gym-rutina")
-        app.navigationBars.buttons.firstMatch.tap()
+    }
+
+    /// Separada de `testGymScreens` para no pasar el límite de 2 minutos por prueba.
+    func testGymSessionScreens() {
+        let app = launch(demo)
+        app.tabBars.buttons["Gym"].tap()
+        _ = app.navigationBars["GYM"].waitForExistence(timeout: 10)
         app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Empezar")).firstMatch.tap()
         sleep(2)
         snap(app, "27-gym-sesion")

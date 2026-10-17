@@ -12,8 +12,8 @@ struct SplashView: View {
 
     var body: some View {
         ZStack {
-            // Mismo negro que la pantalla de arranque de iOS, para que no haya un destello.
-            Color.ink.ignoresSafeArea()
+            // Mismo rojo que la pantalla de arranque de iOS y el primer cuadro del video.
+            Color.signal.ignoresSafeArea()
             if let player {
                 VideoLayerView(player: player)
                     .ignoresSafeArea()

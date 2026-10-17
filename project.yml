@@ -31,7 +31,9 @@ targets:
         CFBundleDevelopmentRegion: es
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        UILaunchScreen: {}
+        # Rojo, como el primer cuadro del video de presentación (sin destello negro al abrir).
+        UILaunchScreen:
+          UIColorName: signal
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         NSFaceIDUsageDescription: UVU usa Face ID para proteger tu journal.
