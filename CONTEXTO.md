@@ -1,6 +1,6 @@
 # Contexto del proyecto UVU (para continuar en otro chat)
 
-Resumen de todo lo hablado y hecho hasta el 16 de octubre de 2026 (incluye el sistema visual
+Resumen de todo lo hablado y hecho hasta el 17 de octubre de 2026 (incluye la fase 3 y el sistema visual
 DISCIPLINE, sección 7). Pégalo al inicio de un chat nuevo con Claude (o pídele que lea este archivo)
 para continuar sin perder contexto.
 
@@ -103,7 +103,12 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
 - **Hoy nunca se pinta de rojo**, solo verde o amarillo si ya hubo avance. Los días anteriores a la
   creación del hábito son grises.
 - **Tareas recurrentes (fase 3):** al completarla, queda en Completadas y se crea la siguiente
-  ocurrencia.
+  ocurrencia con las subtareas sin marcar. La fecha avanza desde la anterior (conservando la hora) y
+  salta las ocurrencias ya pasadas.
+- **Avisos de tareas (mis respuestas en la fase 3):**
+  - Las tareas con fecha pero sin hora avisan a las **9:00** de ese día (cambiable en Ajustes).
+  - La anticipación se **elige por tarea**: a la hora, 5, 15 o 30 min, 1 hora o 1 día antes.
+  - **"Posponer 1 hora" solo mueve el aviso**; la fecha límite no cambia.
 - **Importar JSON:** reemplaza **todos** los datos, con confirmación. El respaldo tiene `version`
   (actualmente 1).
 - **Hábitos precargados (8):** Ejercicio (sí/no, `systemRole = "exercise"`), Tomar agua (8 vasos),
@@ -134,21 +139,33 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
      `enum HabitsRoute`.
   - Además, las notificaciones se ven con la app abierta (`AppDelegate` + `NotificationDelegate`).
 - **Sistema visual DISCIPLINE** (sección 7), aplicado a todas las pantallas que existen hoy.
-  Se revisó con capturas automáticas del simulador. 25 tests en verde.
-- El último `UVU.ipa` (fase 2b + DISCIPLINE) está en `Descargas\CLAUDE`. **Todavía no confirmé
-  cómo se ve en mi iPhone.**
+  Se revisó con capturas automáticas del simulador.
+- **Fase 3: tareas y notificaciones.**
+  - Vistas Hoy (con Atrasadas), Próximos (por día), Todas (por lista) y Hechas, con un `ScopeBar`
+    propio.
+  - Tareas con notas, lista, fecha y hora, prioridad (!, !!, !!!), subtareas y recurrencia.
+  - Deslizar a la derecha completa o reabre; a la izquierda borra.
+  - Listas: crear, editar, ordenar y borrar.
+  - Avisos con botones **Completar** y **Posponer 1 hora**, que funcionan con la app cerrada: hay
+    un contenedor compartido `AppContainer.shared` y la categoría se registra en `AppDelegate`.
+  - Lógica en `Services/Tasks/` (`TaskSchedule`, `TaskActions`, `TaskGrouping`). Pantallas en
+    `Features/Tasks/`.
+  - 34 tests en verde, incluido un flujo de interfaz: crear, completar deslizando y verla en Hechas.
+- El último `UVU.ipa` (fase 3) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
 
-**Siguiente:** probar el estilo nuevo en el iPhone y luego **fase 3: tareas y notificaciones**
-(categorías de notificación con acciones "Completar" y "Posponer 1 hora", recurrencias y deslizar
-para completar o borrar).
+**Siguiente:** probar la fase 3 en el iPhone (avisos, botones de la notificación, deslizar) y luego
+**fase 4: journal**.
 
 **Pendiente o limitaciones conocidas:**
 - La pantalla Hoy y el calendario unificado son marcadores de posición hasta la fase 6.
 - Los recordatorios de hábitos repiten cada día aunque el hábito ya esté cumplido.
-- iOS permite unas **64 notificaciones pendientes** por app. El formulario avisa si un hábito usa
-  muchas. Hay que tenerlo en cuenta al sumar las de tareas.
-- `NotificationService.rescheduleAll` borra **todas** las notificaciones pendientes y solo vuelve a
-  crear las de hábitos. En la fase 3 debe reprogramar también las de tareas.
+- iOS permite unas **64 notificaciones pendientes** por app (hábitos + tareas). El formulario de
+  hábitos avisa si uno usa muchas. Cada tarea con aviso usa una.
+- Reabrir una tarea recurrente no borra la ocurrencia siguiente que ya se creó.
+- Durante las pruebas automáticas no se programan avisos (`NotificationService.isDisabledForTesting`,
+  argumento `-uvu-no-notifications`). Así el cuadro de permiso no bloquea las pruebas de interfaz.
+- En las pruebas de interfaz, el checkbox de una tarea se llama "Completar <título>": para abrir la
+  tarea hay que excluirlo de la búsqueda.
 - Widgets (fase 7) necesitan App Group: con firma gratuita puede no funcionar; se verá en esa fase.
 - Los números de los días completados (texto negro sobre rojo) tienen contraste 3,9:1. Cumple AA
   solo para texto grande; VoiceOver lee la fecha y el estado completos.
