@@ -26,7 +26,7 @@ final class JournalUITests: XCTestCase {
         app.buttons["Guardar"].firstMatch.tap()
 
         // La tarjeta de hoy ahora muestra la entrada.
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label == %@", "Seguir escribiendo")).firstMatch
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Seguir escribiendo")).firstMatch
             .waitForExistence(timeout: 10), "La entrada de hoy no se guardó")
 
         // Búsqueda: aparece al deslizar hacia abajo.

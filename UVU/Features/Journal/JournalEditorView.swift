@@ -109,7 +109,7 @@ struct JournalEditorView: View {
                 }
             }
             .uvuForm()
-            .navigationTitle(existing == nil ? "NUEVA ENTRADA" : "ENTRADA")
+            .navigationTitle(existing == nil ? "ESCRIBIR" : "ENTRADA")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

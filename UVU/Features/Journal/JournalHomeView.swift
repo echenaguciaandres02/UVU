@@ -267,6 +267,8 @@ struct JournalDayCell: View {
         let shape = RoundedRectangle(cornerRadius: Radius.sharp, style: .continuous)
         let isToday = AppCalendar.calendar.isDateInToday(date)
         ZStack {
+            // Base siempre presente: sin ella, los días futuros (vacíos) no tienen tamaño y la fila se aplasta.
+            Color.clear
             if let mood {
                 shape.fill(Mood.shade(mood))
             } else if !isFuture {
