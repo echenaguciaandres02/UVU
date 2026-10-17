@@ -199,6 +199,7 @@ Guidelines, limpia, rápida y con modo claro/oscuro.
   - Historial con detalle por entreno y "PR" en `brass`.
   - Progreso por ejercicio con **Swift Charts**: peso máximo, 1RM y volumen; el punto rojo es el
     récord.
+  - 50 tests en verde (36 unitarios y 14 de interfaz), incluido un entreno completo de principio a fin.
   - Lógica en `Services/Gym/` (`GymStats`, `WorkoutActions`, `RestTimer`). Pantallas en
     `Features/Gym/`.
 - El último `UVU.ipa` (fase 5) está en `Descargas\CLAUDE`. **Todavía no lo probé en mi iPhone.**
