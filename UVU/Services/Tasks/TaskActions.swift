@@ -94,6 +94,8 @@ struct TaskSection: Identifiable {
     let id: String
     let title: String
     let tasks: [TaskItem]
+    /// Lista de la sección (en Hoy y Todas), para mostrar su ícono y color.
+    var list: TaskList? = nil
 }
 
 enum TaskGrouping {
@@ -111,17 +113,27 @@ enum TaskGrouping {
         }
     }
 
+    /// Una sección por lista, en el orden de las listas; las tareas sin lista al final.
+    static func byList(_ tasks: [TaskItem], prefix: String) -> [TaskSection] {
+        let grouped = Dictionary(grouping: tasks) { $0.list?.id }
+        let lists = Set(tasks.compactMap(\.list)).sorted { ($0.sortOrder, $0.name) < ($1.sortOrder, $1.name) }
+        var sections = lists.map { list in
+            TaskSection(id: "\(prefix)-list-\(list.id.uuidString)", title: list.name,
+                        tasks: sortPending(grouped[list.id] ?? []), list: list)
+        }
+        if let orphans = grouped[nil], !orphans.isEmpty {
+            sections.append(TaskSection(id: "\(prefix)-no-list", title: "Sin lista", tasks: sortPending(orphans)))
+        }
+        return sections
+    }
+
     static func sections(for scope: TaskScope, tasks: [TaskItem], now: Date = .now) -> [TaskSection] {
         let pending = sortPending(tasks.filter { !$0.isCompleted })
         switch scope {
         case .today:
+            // Vencen hoy o están atrasadas, separadas por lista (las atrasadas primero dentro de cada una).
             let due = pending.filter { TaskSchedule.isDueTodayOrOverdue(due: $0.dueDate, now: now) }
-            let overdue = due.filter { AppCalendar.startOfDay($0.dueDate ?? now) < AppCalendar.startOfDay(now) }
-            let today = due.filter { AppCalendar.calendar.isDate($0.dueDate ?? .distantPast, inSameDayAs: now) }
-            return [
-                TaskSection(id: "overdue", title: "Atrasadas", tasks: overdue),
-                TaskSection(id: "today", title: "Hoy", tasks: today),
-            ].filter { !$0.tasks.isEmpty }
+            return byList(due, prefix: "today")
 
         case .upcoming:
             let upcoming = pending.filter { TaskSchedule.isUpcoming(due: $0.dueDate, now: now) }
@@ -133,15 +145,7 @@ enum TaskGrouping {
             }
 
         case .all:
-            let byList = Dictionary(grouping: pending) { $0.list?.id }
-            let lists = Set(pending.compactMap(\.list)).sorted { ($0.sortOrder, $0.name) < ($1.sortOrder, $1.name) }
-            var sections = lists.map { list in
-                TaskSection(id: "list-\(list.id.uuidString)", title: list.name, tasks: byList[list.id] ?? [])
-            }
-            if let orphans = byList[nil], !orphans.isEmpty {
-                sections.append(TaskSection(id: "no-list", title: "Sin lista", tasks: orphans))
-            }
-            return sections
+            return byList(pending, prefix: "all")
 
         case .completed:
             let done = tasks.filter(\.isCompleted)

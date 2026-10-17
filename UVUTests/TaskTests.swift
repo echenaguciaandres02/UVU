@@ -129,27 +129,35 @@ final class TaskActionsTests: XCTestCase {
 
     func testScopesGroupTasks() {
         let now = date(10, 16, 10)
-        let overdue = makeTask("Atrasada", due: date(10, 14))
-        let today = makeTask("De hoy", due: date(10, 16, 18))
+        let personal = TaskList(name: "Personal", symbol: "person.fill", colorHex: "007AFF", sortOrder: 0)
+        let work = TaskList(name: "Trabajo", symbol: "briefcase.fill", colorHex: "FF9500", sortOrder: 1)
+        context.insert(personal)
+        context.insert(work)
+        let overdue = makeTask("Atrasada", due: date(10, 14), list: work)
+        let today = makeTask("De hoy", due: date(10, 16, 18), list: personal)
+        let workToday = makeTask("Del trabajo hoy", due: date(10, 16), list: work)
         let tomorrow = makeTask("Mañana", due: date(10, 17))
         let later = makeTask("Más adelante", due: date(10, 30))
         let undated = makeTask("Sin fecha", due: nil)
         let done = makeTask("Hecha", due: date(10, 15))
         done.isCompleted = true
         done.completedAt = date(10, 15, 20)
-        let all = [overdue, today, tomorrow, later, undated, done]
+        let all = [overdue, today, workToday, tomorrow, later, undated, done]
 
+        // Hoy: una sección por lista (en su orden), con las atrasadas primero dentro de cada una.
         let todaySections = TaskGrouping.sections(for: .today, tasks: all, now: now)
-        XCTAssertEqual(todaySections.map(\.title), ["Atrasadas", "Hoy"])
-        XCTAssertEqual(todaySections.map { $0.tasks.map(\.title) }, [["Atrasada"], ["De hoy"]])
+        XCTAssertEqual(todaySections.map(\.title), ["Personal", "Trabajo"])
+        XCTAssertEqual(todaySections.map { $0.tasks.map(\.title) }, [["De hoy"], ["Atrasada", "Del trabajo hoy"]])
+        XCTAssertEqual(todaySections.first?.list?.id, personal.id)
 
         let upcoming = TaskGrouping.sections(for: .upcoming, tasks: all, now: now)
         XCTAssertEqual(upcoming.flatMap { $0.tasks.map(\.title) }, ["Mañana", "Más adelante"])
         XCTAssertEqual(upcoming.first?.title, "MAÑANA")
 
         let allSections = TaskGrouping.sections(for: .all, tasks: all, now: now)
+        XCTAssertEqual(allSections.map(\.title), ["Personal", "Trabajo", "Sin lista"])
         XCTAssertEqual(allSections.flatMap { $0.tasks.map(\.title) },
-                       ["Atrasada", "De hoy", "Mañana", "Más adelante", "Sin fecha"])
+                       ["De hoy", "Atrasada", "Del trabajo hoy", "Mañana", "Más adelante", "Sin fecha"])
 
         let completed = TaskGrouping.sections(for: .completed, tasks: all, now: now)
         XCTAssertEqual(completed.flatMap { $0.tasks.map(\.title) }, ["Hecha"])

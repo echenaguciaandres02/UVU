@@ -15,7 +15,7 @@ struct TodayView: View {
                         PosterHeader(title: "Hoy.", subtitle: PosterHeader.dateLine(), size: 104)
                     }
 
-                    RedPoster(text: Quotes.ofTheDay(), caption: "Frase del día")
+                    RedPoster(text: Quotes.ofTheDay(), caption: "Frase del día", topInset: 64)
                         .overlay(alignment: .topTrailing) {
                             TapeLabel(text: "DO.")
                                 .padding(Space.m)

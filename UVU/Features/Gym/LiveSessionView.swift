@@ -117,12 +117,30 @@ struct LiveSessionView: View {
     }
 
     private func setCompleted(_ set: WorkoutSet, in item: SessionExercise) {
-        if set.isCompleted {
-            Haptics.stamp()
-            timer.start(seconds: item.restSeconds, exerciseName: item.exercise?.name ?? "")
-        } else {
+        guard set.isCompleted else {
             Haptics.tap()
+            return
         }
+        Haptics.stamp()
+        let next = nextPending(after: item)
+        timer.start(seconds: item.restSeconds,
+                    exerciseName: next?.exercise ?? item.exercise?.name ?? "",
+                    nextSet: next?.label ?? "Última serie hecha",
+                    workoutName: item.session?.routine?.name ?? "Entreno libre")
+    }
+
+    /// Siguiente serie sin hacer: primero en este ejercicio, luego en los siguientes.
+    private func nextPending(after item: SessionExercise) -> (exercise: String, label: String)? {
+        guard let session = item.session else { return nil }
+        let exercises = session.sortedExercises
+        let startIndex = exercises.firstIndex { $0.id == item.id } ?? 0
+        for candidate in exercises[startIndex...] {
+            let sets = candidate.sortedSets
+            if let index = sets.firstIndex(where: { !$0.isCompleted }) {
+                return (candidate.exercise?.name ?? "Ejercicio", "Serie \(index + 1) de \(sets.count)")
+            }
+        }
+        return nil
     }
 
     private func finish() {

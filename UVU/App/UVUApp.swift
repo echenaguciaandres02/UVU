@@ -25,6 +25,10 @@ struct UVUApp: App {
             if phase == .background {
                 JournalLock.shared.lock()
             }
+            // Si el descanso terminó con el teléfono bloqueado, cierra su Live Activity.
+            if phase == .active {
+                RestTimer.shared.refresh()
+            }
         }
     }
 

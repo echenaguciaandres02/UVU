@@ -1,6 +1,24 @@
 import SwiftUI
 import SwiftData
 
+extension View {
+    /// Fondo de fila de tarea: `carbon` con una franja vertical del color (apagado) de su lista,
+    /// para ver de un vistazo a qué lista pertenece.
+    func taskRowSurface(_ list: TaskList?) -> some View {
+        self
+            .listRowBackground(
+                Color.carbon.overlay(alignment: .leading) {
+                    if let list {
+                        Rectangle()
+                            .fill(Color.muted(hex: list.colorHex))
+                            .frame(width: 4)
+                    }
+                }
+            )
+            .listRowSeparatorTint(.graphite)
+    }
+}
+
 /// Fila de una tarea: checkbox que se estampa, título y datos (vence, lista, subtareas, repetición).
 /// Deslizar a la derecha completa (o reabre); a la izquierda borra.
 struct TaskRowView: View {

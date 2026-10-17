@@ -130,23 +130,21 @@ private struct RoutineItemRow: View {
     @Bindable var item: RoutineExercise
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.xs) {
+        // Contadores propios en tres columnas: los Stepper del sistema no cabían en la fila y se
+        // dibujaban encimados (dos "− +" uno sobre otro).
+        VStack(alignment: .leading, spacing: Space.s) {
             Text(item.exercise?.name ?? "Ejercicio borrado")
                 .font(.ui(16, .semibold))
                 .foregroundStyle(.bone)
-            HStack(spacing: Space.m) {
-                Stepper(value: $item.targetSets, in: 1...10) {
-                    Text("\(item.targetSets) series").labelCaps(11, .semibold, color: .bone)
+            HStack(alignment: .top, spacing: Space.s) {
+                CompactStepper(title: "Series", value: $item.targetSets, range: 1...10) { "\($0)" }
+                CompactStepper(title: "Reps", value: $item.targetReps, range: 1...50) { "\($0)" }
+                CompactStepper(title: "Descanso", value: $item.restSeconds, range: 15...600, step: 15) {
+                    GymMath.duration(TimeInterval($0))
                 }
-                Stepper(value: $item.targetReps, in: 1...50) {
-                    Text("\(item.targetReps) reps").labelCaps(11, .semibold, color: .bone)
-                }
-            }
-            Stepper(value: $item.restSeconds, in: 15...600, step: 15) {
-                Text("Descanso \(GymMath.duration(TimeInterval(item.restSeconds)))").labelCaps(11, .semibold)
             }
         }
-        .padding(.vertical, Space.xxs)
+        .padding(.vertical, Space.xs)
     }
 }
 

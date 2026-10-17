@@ -125,7 +125,7 @@ struct ListTasksView: View {
                 Section {
                     ForEach(pending) { task in
                         TaskRowView(task: task, showList: false) { editingTask = task }
-                            .rowSurface()
+                            .taskRowSurface(task.list)
                     }
                 } header: {
                     Text("Pendientes · \(pending.count)").labelCaps()

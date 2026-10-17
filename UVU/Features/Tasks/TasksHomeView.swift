@@ -33,15 +33,22 @@ struct TasksHomeView: View {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.tasks) { task in
-                            TaskRowView(task: task, showList: scope != .all) { editingTask = task }
-                                .rowSurface()
+                            // En Hoy y Todas la sección ya dice la lista; la franja de color la repite.
+                            TaskRowView(task: task, showList: section.list == nil) { editingTask = task }
+                                .taskRowSurface(task.list)
                         }
                     } header: {
-                        HStack {
-                            Text(section.title).labelCaps(12, .semibold, color: section.id == "overdue" ? .bone : .ash)
+                        HStack(spacing: Space.xs) {
+                            if let list = section.list {
+                                SymbolBadge(symbol: list.symbol, colorHex: list.colorHex, size: 22)
+                                Text(section.title).labelCaps(12, .black, color: .bone)
+                            } else {
+                                Text(section.title).labelCaps(12, .semibold)
+                            }
                             Spacer()
                             Text("\(section.tasks.count)").labelCaps(12, .semibold)
                         }
+                        .padding(.top, Space.xs)
                     }
                 }
             }

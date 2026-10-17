@@ -36,10 +36,12 @@ struct RedPoster: View {
     var caption: String?
     var minHeight: CGFloat = 220
     var textSize: CGFloat = 52
+    /// Espacio libre arriba (por ejemplo, para la cinta "DO." encima del póster).
+    var topInset: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.s) {
-            Spacer(minLength: 0)
+            Spacer(minLength: topInset)
             Text(text)
                 .font(.display(textSize, relativeTo: .largeTitle))
                 .textCase(.uppercase)

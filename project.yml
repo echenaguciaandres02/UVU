@@ -21,6 +21,9 @@ targets:
     platform: iOS
     sources:
       - path: UVU
+    dependencies:
+      # Extensión de widgets: Live Activity del descanso (y los widgets de la fase 7).
+      - target: UVUWidgets
     info:
       path: UVU/Resources/Info.plist
       properties:
@@ -34,6 +37,7 @@ targets:
         NSFaceIDUsageDescription: UVU usa Face ID para proteger tu journal.
         ITSAppUsesNonExemptEncryption: false
         UIUserInterfaceStyle: Dark
+        NSSupportsLiveActivities: true
         UIAppFonts:
           - Anton-Regular.ttf
           - Inter-Regular.ttf
@@ -50,6 +54,27 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+  # Extensión de WidgetKit: Live Activity del temporizador de descanso (pantalla de bloqueo y
+  # Dynamic Island). Comparte con la app solo la definición de la actividad.
+  UVUWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: UVUWidgets
+      - path: UVU/Shared/LiveActivity
+    info:
+      path: UVUWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: UVU
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.uvu.app.widgets
+        TARGETED_DEVICE_FAMILY: "1"
 
   UVUTests:
     type: bundle.unit-test
